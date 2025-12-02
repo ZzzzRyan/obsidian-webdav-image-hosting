@@ -1,0 +1,265 @@
+import { App, PluginSettingTab, Setting, Notice } from "obsidian";
+import WebDAVImageUploaderPlugin from "../main";
+
+export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
+	plugin: WebDAVImageUploaderPlugin;
+
+	constructor(app: App, plugin: WebDAVImageUploaderPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
+
+	display(): void {
+		const { containerEl } = this;
+		containerEl.empty();
+
+		containerEl.createEl("h2", { text: "WebDAV Image Uploader Settings" });
+
+		// WebDAV Configuration
+		containerEl.createEl("h3", { text: "WebDAV Configuration" });
+
+		new Setting(containerEl)
+			.setName("WebDAV URL")
+			.setDesc("WebDAV server URL (e.g., https://dav.example.com)")
+			.addText((text) =>
+				text
+					.setPlaceholder("https://dav.example.com")
+					.setValue(this.plugin.settings.webdavUrl)
+					.onChange(async (value) => {
+						this.plugin.settings.webdavUrl = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Username")
+			.setDesc("WebDAV username")
+			.addText((text) =>
+				text
+					.setPlaceholder("username")
+					.setValue(this.plugin.settings.webdavUsername)
+					.onChange(async (value) => {
+						this.plugin.settings.webdavUsername = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Password")
+			.setDesc("WebDAV password")
+			.addText((text) => {
+				text.setPlaceholder("password")
+					.setValue(this.plugin.settings.webdavPassword)
+					.onChange(async (value) => {
+						this.plugin.settings.webdavPassword = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.type = "password";
+			});
+
+		new Setting(containerEl)
+			.setName("Upload path")
+			.setDesc("Path on WebDAV server to store images (e.g., /images)")
+			.addText((text) =>
+				text
+					.setPlaceholder("/images")
+					.setValue(this.plugin.settings.webdavPath)
+					.onChange(async (value) => {
+						this.plugin.settings.webdavPath = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Test connection")
+			.setDesc("Test WebDAV connection")
+			.addButton((button) =>
+				button.setButtonText("Test").onClick(async () => {
+					button.setDisabled(true);
+					button.setButtonText("Testing...");
+
+					const success = await this.plugin.uploader.testConnection();
+
+					if (success) {
+						new Notice("✓ WebDAV connection successful!");
+					} else {
+						new Notice("✗ WebDAV connection failed. Check your settings.");
+					}
+
+					button.setDisabled(false);
+					button.setButtonText("Test");
+				})
+			);
+
+		// Image URL Configuration
+		containerEl.createEl("h3", { text: "Image URL Configuration" });
+
+		new Setting(containerEl)
+			.setName("Custom URL prefix")
+			.setDesc(
+				"The URL prefix to use for inserted image links (e.g., https://cdn.example.com/images)"
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("https://cdn.example.com/images")
+					.setValue(this.plugin.settings.customUrlPrefix)
+					.onChange(async (value) => {
+						this.plugin.settings.customUrlPrefix = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		// Rename Mode Configuration
+		containerEl.createEl("h3", { text: "Rename Mode" });
+
+		new Setting(containerEl)
+			.setName("Rename mode")
+			.setDesc("How to name uploaded images")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("dialog", "Rename Dialog")
+					.addOption("ai", "AI Rename")
+					.addOption("template", "Template Rename")
+					.setValue(this.plugin.settings.renameMode)
+					.onChange(async (value: "dialog" | "ai" | "template") => {
+						this.plugin.settings.renameMode = value;
+						await this.plugin.saveSettings();
+						this.display(); // Refresh to show/hide relevant settings
+					})
+			);
+
+		// Template settings (shown for dialog and template modes)
+		if (this.plugin.settings.renameMode === "dialog" ||
+		    this.plugin.settings.renameMode === "template") {
+			new Setting(containerEl)
+				.setName("Default image name template")
+				.setDesc(
+					"Template for auto-generated image names. Available placeholders: {timestamp}, {random}, {date}, {baseName}, {ext}"
+				)
+				.addText((text) =>
+					text
+						.setPlaceholder("image-{timestamp}")
+						.setValue(this.plugin.settings.defaultImageName)
+						.onChange(async (value) => {
+							this.plugin.settings.defaultImageName = value;
+							await this.plugin.saveSettings();
+						})
+				);
+		}
+
+		// AI Configuration (shown for AI and dialog modes)
+		if (this.plugin.settings.renameMode === "ai" ||
+		    this.plugin.settings.renameMode === "dialog") {
+			containerEl.createEl("h3", { text: "AI Configuration" });
+
+			new Setting(containerEl)
+				.setName("AI API Key")
+				.setDesc("Your OpenAI API key or compatible service key")
+				.addText((text) => {
+					text.setPlaceholder("sk-...")
+						.setValue(this.plugin.settings.aiApiKey)
+						.onChange(async (value) => {
+							this.plugin.settings.aiApiKey = value;
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.type = "password";
+				});
+
+			new Setting(containerEl)
+				.setName("AI API Endpoint")
+				.setDesc("API endpoint URL (will auto-append /v1/chat/completions if needed)")
+				.addText((text) =>
+					text
+						.setPlaceholder("https://api.openai.com")
+						.setValue(this.plugin.settings.aiEndpoint)
+						.onChange(async (value) => {
+							this.plugin.settings.aiEndpoint = value;
+							await this.plugin.saveSettings();
+						})
+				);
+
+			new Setting(containerEl)
+				.setName("AI Model")
+				.setDesc("Model name (e.g., gpt-4o-mini, gpt-4-vision-preview)")
+				.addText((text) =>
+					text
+						.setPlaceholder("gpt-4o-mini")
+						.setValue(this.plugin.settings.aiModel)
+						.onChange(async (value) => {
+							this.plugin.settings.aiModel = value;
+							await this.plugin.saveSettings();
+						})
+				);
+
+			new Setting(containerEl)
+				.setName("AI Prompt")
+				.setDesc("Custom prompt for AI image naming. Available placeholders: {timestamp}, {random}, {date}")
+				.addTextArea((text) => {
+					text
+						.setPlaceholder("Describe what prompt to use for AI naming...")
+						.setValue(this.plugin.settings.aiPrompt)
+						.onChange(async (value) => {
+							this.plugin.settings.aiPrompt = value;
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.rows = 4;
+					text.inputEl.style.width = "100%";
+				});
+
+			new Setting(containerEl)
+				.setName("Test AI connection")
+				.setDesc("Test connection to AI API")
+				.addButton((button) =>
+					button.setButtonText("Test").onClick(async () => {
+						button.setDisabled(true);
+						button.setButtonText("Testing...");
+
+						const aiService = new (await import("./ai-rename")).AIRenameService(
+							this.plugin.settings
+						);
+						const success = await aiService.testConnection();
+
+						if (success) {
+							new Notice("✓ AI connection successful!");
+						} else {
+							new Notice("✗ AI connection failed. Check your settings.");
+						}
+
+						button.setDisabled(false);
+						button.setButtonText("Test");
+					})
+				);
+		}
+
+		// Local Image Upload
+		containerEl.createEl("h3", { text: "Local Image Upload" });
+
+		new Setting(containerEl)
+			.setName("Enable local image upload")
+			.setDesc("Add 'Upload to WebDAV' option to image file context menu")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.uploadLocalImages)
+					.onChange(async (value) => {
+						this.plugin.settings.uploadLocalImages = value;
+						await this.plugin.saveSettings();
+						new Notice("Please reload Obsidian for this change to take effect");
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Local file handling")
+			.setDesc("What to do with local image after upload")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("nothing", "Keep file")
+					.addOption("trash", "Move to trash")
+					.addOption("delete", "Delete permanently")
+					.setValue(this.plugin.settings.localFileHandling)
+					.onChange(async (value: "nothing" | "trash" | "delete") => {
+						this.plugin.settings.localFileHandling = value;
+						await this.plugin.saveSettings();
+					})
+			);
+	}
+}

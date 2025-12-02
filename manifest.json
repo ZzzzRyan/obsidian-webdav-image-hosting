@@ -1,0 +1,10 @@
+{
+	"id": "webdav-image-hosting",
+	"name": "WebDAV Image Hosting",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Automatically upload pasted/dropped images to WebDAV server with powerful AI-assisted rename feature.",
+	"author": "ZzzzRyan",
+	"authorUrl": "",
+	"isDesktopOnly": false
+}
