@@ -1,0 +1,65 @@
+name: Release Obsidian Plugin
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # 你的 devDependencies 里是 TypeScript 4.7 / Node types 16.11，
+          # 用 Node 18/20 都能跑。这里选择 18，兼容好一点。
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Package plugin files
+        run: |
+          ls -lah
+
+          # 确保 main.js / manifest.json 存在
+          if [ ! -f main.js ]; then
+            echo "main.js not found in repository root after build!"
+            exit 1
+          fi
+
+          if [ ! -f manifest.json ]; then
+            echo "manifest.json not found in repository root!"
+            exit 1
+          fi
+
+          # styles.css 可选
+          if [ -f styles.css ]; then
+            zip obsidian-webdav-image-hosting.zip main.js manifest.json styles.css
+          else
+            echo "styles.css not found, packaging only main.js and manifest.json"
+            zip obsidian-webdav-image-hosting.zip main.js manifest.json
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            自动构建的 Obsidian 插件发布包。
+            对应 tag：${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: obsidian-webdav-image-hosting.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
