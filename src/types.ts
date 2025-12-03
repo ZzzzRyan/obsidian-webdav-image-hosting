@@ -29,17 +29,17 @@ export const DEFAULT_SETTINGS: WebDAVImageUploaderSettings = {
 	webdavPath: "/images",
 	customUrlPrefix: "https://your-cdn.com/images",
 	showRenameDialog: true,
-	defaultImageName: "image-{timestamp}",
+	defaultImageName: "image-{date}",
 	renameMode: "dialog",
 	aiApiKey: "",
 	aiEndpoint: "https://api.openai.com",
 	aiModel: "gpt-4o-mini",
-	aiPrompt: "Analyze this image and generate a filename.\nRules:\n1. Identify 2-3 lowercase English words describing the content, ordered from broad category to specific detail.\n2. Join them with underscores.\n3. ALWAYS append the fixed suffix \"_zryan\" at the end.\nOutput ONLY the final string (e.g., \"broad_specific_detail_zryan\").",
+	aiPrompt: "Analyze this image and generate a filename.\nRules:\n1. Identify 2-3 lowercase English words describing the content, ordered from broad category to specific detail.\n2. Join them with underscores.\n3. ALWAYS append the fixed suffix \"_{date}\" at the end.\nOutput ONLY the final string (e.g., \"broad_specific_detail_{date}\").",
 	aiCompressImage: true,
 	uploadLocalImages: true,
 	localFileHandling: "nothing",
 	debugMode: false,
-	language: "en",
+	language: "zh-cn",
 };
 
 // Debug logging utility
@@ -82,7 +82,7 @@ export function replacePlaceholders(
 ): string {
 	const timestamp = Date.now().toString();
 	const randomStr = Math.random().toString(36).substring(2, 8);
-	const date = new Date().toISOString().split("T")[0];
+	const date = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
 
 	let baseName = "";
 	let ext = "";

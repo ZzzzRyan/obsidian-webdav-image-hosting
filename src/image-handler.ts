@@ -67,8 +67,12 @@ export class ImageHandler {
 			// Read the file
 			const arrayBuffer = await this.plugin.app.vault.readBinary(file);
 
+			// Find the image reference in the current document
+			const currentContent = editor.getValue();
+			const imageRefInfo = this.findImageReference(currentContent, file.name, file.path);
+
 			// Get the filename to determine the mode
-			await this.processImageWithMode(arrayBuffer, file.name, editor, file);
+			await this.processImageWithMode(arrayBuffer, file.name, editor, file, imageRefInfo);
 		} catch (error) {
 			console.error("Error uploading local image:", error);
 			new Notice(`Failed to upload local image: ${error.message}`);
@@ -89,6 +93,47 @@ export class ImageHandler {
 		return imageExtensions.includes(ext);
 	}
 
+	private findImageReference(
+		content: string,
+		fileName: string,
+		filePath: string
+	): { found: boolean; fullMatch?: string; sizeParam?: string } {
+		// Try to find wiki-style links: ![[filename]] or ![[path/to/filename]]
+		// Also capture size parameter like |300
+		const escapedFileName = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+		// Match ![[filename|size]] or ![[path/to/filename|size]]
+		const wikiRegex1 = new RegExp(`!\\[\\[${escapedFileName}(\\|\\d+)?\\]\\]`, 'g');
+		const wikiRegex2 = new RegExp(`!\\[\\[${escapedPath}(\\|\\d+)?\\]\\]`, 'g');
+
+		let match = content.match(wikiRegex1) || content.match(wikiRegex2);
+		if (match) {
+			const fullMatch = match[0];
+			const sizeMatch = fullMatch.match(/\|(\d+)/);
+			return {
+				found: true,
+				fullMatch,
+				sizeParam: sizeMatch ? sizeMatch[1] : undefined
+			};
+		}
+
+		// Try to find markdown-style links: ![alt](filename) or ![alt](path/to/filename)
+		const mdRegex1 = new RegExp(`!\\[([^\\]]*)\\]\\(${escapedFileName}\\)`, 'g');
+		const mdRegex2 = new RegExp(`!\\[([^\\]]*)\\]\\(${escapedPath}\\)`, 'g');
+
+		match = content.match(mdRegex1) || content.match(mdRegex2);
+		if (match) {
+			return {
+				found: true,
+				fullMatch: match[0],
+				sizeParam: undefined
+			};
+		}
+
+		return { found: false };
+	}
+
 	private async processImageFile(
 		file: File,
 		editor: Editor
@@ -107,19 +152,20 @@ export class ImageHandler {
 		imageData: ArrayBuffer,
 		originalName: string,
 		editor: Editor,
-		localFile?: TFile
+		localFile?: TFile,
+		imageRefInfo?: { found: boolean; fullMatch?: string; sizeParam?: string }
 	): Promise<void> {
 		const mode = this.plugin.settings.renameMode;
 
 		switch (mode) {
 			case "dialog":
-				await this.handleDialogMode(imageData, originalName, editor, localFile);
+				await this.handleDialogMode(imageData, originalName, editor, localFile, imageRefInfo);
 				break;
 			case "ai":
-				await this.handleAIMode(imageData, originalName, editor, localFile);
+				await this.handleAIMode(imageData, originalName, editor, localFile, imageRefInfo);
 				break;
 			case "template":
-				await this.handleTemplateMode(imageData, originalName, editor, localFile);
+				await this.handleTemplateMode(imageData, originalName, editor, localFile, imageRefInfo);
 				break;
 		}
 	}
@@ -128,7 +174,8 @@ export class ImageHandler {
 		imageData: ArrayBuffer,
 		originalName: string,
 		editor: Editor,
-		localFile?: TFile
+		localFile?: TFile,
+		imageRefInfo?: { found: boolean; fullMatch?: string; sizeParam?: string }
 	): Promise<void> {
 		const defaultName = this.plugin.uploader.generateFileName(originalName);
 
@@ -143,7 +190,7 @@ export class ImageHandler {
 			this.plugin.app,
 			defaultName,
 			async (fileName) => {
-				await this.uploadAndInsert(imageData, fileName, editor, localFile);
+				await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
 			},
 			aiCallback
 		).open();
@@ -153,7 +200,8 @@ export class ImageHandler {
 		imageData: ArrayBuffer,
 		originalName: string,
 		editor: Editor,
-		localFile?: TFile
+		localFile?: TFile,
+		imageRefInfo?: { found: boolean; fullMatch?: string; sizeParam?: string }
 	): Promise<void> {
 		try {
 			new Notice("🤖 AI is generating filename...");
@@ -163,11 +211,11 @@ export class ImageHandler {
 			const ext = originalName.match(/\.[^.]+$/)?.[0] || ".png";
 			const fileName = aiName + ext;
 
-			await this.uploadAndInsert(imageData, fileName, editor, localFile);
+			await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
 		} catch (error) {
 			// Fallback to template mode
 			new Notice("AI rename failed, using template...");
-			await this.handleTemplateMode(imageData, originalName, editor, localFile);
+			await this.handleTemplateMode(imageData, originalName, editor, localFile, imageRefInfo);
 		}
 	}
 
@@ -175,17 +223,19 @@ export class ImageHandler {
 		imageData: ArrayBuffer,
 		originalName: string,
 		editor: Editor,
-		localFile?: TFile
+		localFile?: TFile,
+		imageRefInfo?: { found: boolean; fullMatch?: string; sizeParam?: string }
 	): Promise<void> {
 		const fileName = this.plugin.uploader.generateFileName(originalName);
-		await this.uploadAndInsert(imageData, fileName, editor, localFile);
+		await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
 	}
 
 	private async uploadAndInsert(
 		imageData: ArrayBuffer,
 		fileName: string,
 		editor: Editor,
-		localFile?: TFile
+		localFile?: TFile,
+		imageRefInfo?: { found: boolean; fullMatch?: string; sizeParam?: string }
 	): Promise<void> {
 		try {
 			new Notice("Uploading image...");
@@ -196,10 +246,22 @@ export class ImageHandler {
 				fileName
 			);
 
-			// Insert markdown image link at cursor position
-			const cursor = editor.getCursor();
-			const imageMarkdown = `![${fileName}](${imageUrl})`;
-			editor.replaceRange(imageMarkdown, cursor);
+			// Create markdown image link with optional size parameter
+			let imageMarkdown = `![${fileName}](${imageUrl})`;
+			if (imageRefInfo?.sizeParam) {
+				imageMarkdown = `![${fileName}|${imageRefInfo.sizeParam}](${imageUrl})`;
+			}
+
+			// If we found an existing reference, replace it; otherwise insert at cursor
+			if (imageRefInfo?.found && imageRefInfo.fullMatch) {
+				const currentContent = editor.getValue();
+				const newContent = currentContent.replace(imageRefInfo.fullMatch, imageMarkdown);
+				editor.setValue(newContent);
+			} else {
+				// Insert markdown image link at cursor position
+				const cursor = editor.getCursor();
+				editor.replaceRange(imageMarkdown, cursor);
+			}
 
 			new Notice("✓ Image uploaded successfully!");
 

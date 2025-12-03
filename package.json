@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "webdav-image-hosting",
+	"version": "0.1.0",
+	"description": "Automatically upload pasted/dropped images to WebDAV server with powerful AI-assisted rename feature.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
