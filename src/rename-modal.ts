@@ -5,6 +5,7 @@ export class ImageRenameModal extends Modal {
 	fileName: string;
 	onSubmit: (fileName: string) => void;
 	onAIRename?: () => Promise<string>;
+	imageData?: ArrayBuffer;
 	private inputEl: HTMLInputElement;
 	private aiButton: HTMLButtonElement;
 	private previewEl: HTMLElement;
@@ -13,12 +14,14 @@ export class ImageRenameModal extends Modal {
 		app: App,
 		defaultName: string,
 		onSubmit: (fileName: string) => void,
-		onAIRename?: () => Promise<string>
+		onAIRename?: () => Promise<string>,
+		imageData?: ArrayBuffer
 	) {
 		super(app);
 		this.fileName = defaultName;
 		this.onSubmit = onSubmit;
 		this.onAIRename = onAIRename;
+		this.imageData = imageData;
 	}
 
 	onOpen() {
@@ -30,6 +33,33 @@ export class ImageRenameModal extends Modal {
 		modalEl.style.maxWidth = "90vw";
 
 		contentEl.createEl("h2", { text: i18n.t("modal.title") });
+
+		// Add image thumbnail if image data is provided
+		if (this.imageData) {
+			const thumbnailContainer = contentEl.createDiv({ cls: "image-rename-thumbnail" });
+			thumbnailContainer.style.textAlign = "center";
+			thumbnailContainer.style.marginBottom = "16px";
+			thumbnailContainer.style.padding = "12px";
+			thumbnailContainer.style.backgroundColor = "var(--background-secondary)";
+			thumbnailContainer.style.borderRadius = "8px";
+
+			const img = thumbnailContainer.createEl("img");
+			img.style.maxWidth = "100%";
+			img.style.maxHeight = "300px";
+			img.style.objectFit = "contain";
+			img.style.borderRadius = "4px";
+			img.style.border = "1px solid var(--background-modifier-border)";
+
+			// Convert ArrayBuffer to data URL
+			const blob = new Blob([this.imageData]);
+			const url = URL.createObjectURL(blob);
+			img.src = url;
+
+			// Clean up the URL when modal closes
+			img.onload = () => {
+				// Image loaded successfully
+			};
+		}
 
 		// Create a container for the input with AI button
 		const inputContainer = contentEl.createDiv({ cls: "image-rename-input-container" });
@@ -161,6 +191,13 @@ export class ImageRenameModal extends Modal {
 
 	onClose() {
 		const { contentEl } = this;
+
+		// Clean up any created object URLs
+		const img = contentEl.querySelector('.image-rename-thumbnail img') as HTMLImageElement;
+		if (img && img.src.startsWith('blob:')) {
+			URL.revokeObjectURL(img.src);
+		}
+
 		contentEl.empty();
 	}
 }

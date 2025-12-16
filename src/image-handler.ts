@@ -192,7 +192,8 @@ export class ImageHandler {
 			async (fileName) => {
 				await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
 			},
-			aiCallback
+			aiCallback,
+			imageData
 		).open();
 	}
 
@@ -254,9 +255,33 @@ export class ImageHandler {
 
 			// If we found an existing reference, replace it; otherwise insert at cursor
 			if (imageRefInfo?.found && imageRefInfo.fullMatch) {
+				// Find the position of the old image reference and replace it
 				const currentContent = editor.getValue();
-				const newContent = currentContent.replace(imageRefInfo.fullMatch, imageMarkdown);
-				editor.setValue(newContent);
+				const matchIndex = currentContent.indexOf(imageRefInfo.fullMatch);
+
+				if (matchIndex !== -1) {
+					// Save cursor position before replacement
+					const cursor = editor.getCursor();
+
+					// Calculate the position in the document
+					const from = editor.offsetToPos(matchIndex);
+					const to = editor.offsetToPos(matchIndex + imageRefInfo.fullMatch.length);
+
+					// Replace the specific range instead of the entire content
+					editor.replaceRange(imageMarkdown, from, to);
+
+					// Restore cursor position (adjust if cursor was after the replaced text)
+					const lengthDiff = imageMarkdown.length - imageRefInfo.fullMatch.length;
+					const cursorOffset = editor.posToOffset(cursor);
+					if (cursorOffset > matchIndex) {
+						// Cursor was after the replaced text, adjust its position
+						const newCursorOffset = cursorOffset + lengthDiff;
+						editor.setCursor(editor.offsetToPos(newCursorOffset));
+					} else {
+						// Cursor was before or at the replaced text, keep it as is
+						editor.setCursor(cursor);
+					}
+				}
 			} else {
 				// Insert markdown image link at cursor position
 				const cursor = editor.getCursor();
@@ -301,24 +326,65 @@ export class ImageHandler {
 	registerContextMenu(): void {
 		if (!this.plugin.settings.uploadLocalImages) return;
 
+		// Register context menu for image links in the editor
 		this.plugin.registerEvent(
-			this.plugin.app.workspace.on("file-menu", (menu: Menu, file: TFile) => {
-				if (file instanceof TFile && this.isImageFile(file.name)) {
+			this.plugin.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => {
+				// Get the text at cursor position to check if it's an image link
+				const cursor = editor.getCursor();
+				const line = editor.getLine(cursor.line);
+
+				// Check if cursor is on an image reference (wiki or markdown style)
+				const imageInfo = this.getImageAtCursor(editor, cursor);
+
+				if (imageInfo) {
 					menu.addItem((item) => {
 						item
-							.setTitle("Upload to WebDAV")
+							.setTitle(`Upload "${imageInfo.fileName}" to WebDAV`)
 							.setIcon("upload")
 							.onClick(async () => {
-								const editor = this.plugin.app.workspace.activeEditor?.editor;
-								if (editor) {
+								// Find the actual file in vault
+								const file = this.plugin.app.vault.getAbstractFileByPath(imageInfo.filePath);
+								if (file instanceof TFile) {
 									await this.handleLocalImageUpload(file, editor);
 								} else {
-									new Notice("No active editor found");
+									new Notice(`Image file not found: ${imageInfo.filePath}`);
 								}
 							});
 					});
 				}
 			})
 		);
+	}
+
+	private getImageAtCursor(editor: Editor, cursor: { line: number, ch: number }): { fileName: string, filePath: string } | null {
+		const line = editor.getLine(cursor.line);
+		const ch = cursor.ch;
+
+		// Match wiki-style image: ![[image.png]] or ![[path/to/image.png|300]]
+		const wikiRegex = /!\[\[([^\]|]+)(\|[^\]]+)?\]\]/g;
+		let match;
+		while ((match = wikiRegex.exec(line)) !== null) {
+			const start = match.index;
+			const end = start + match[0].length;
+			if (ch >= start && ch <= end) {
+				const path = match[1];
+				const fileName = path.includes('/') ? path.split('/').pop()! : path;
+				return { fileName, filePath: path };
+			}
+		}
+
+		// Match markdown-style image: ![alt](image.png)
+		const mdRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+		while ((match = mdRegex.exec(line)) !== null) {
+			const start = match.index;
+			const end = start + match[0].length;
+			if (ch >= start && ch <= end) {
+				const path = match[2];
+				const fileName = path.includes('/') ? path.split('/').pop()! : path;
+				return { fileName, filePath: path };
+			}
+		}
+
+		return null;
 	}
 }
