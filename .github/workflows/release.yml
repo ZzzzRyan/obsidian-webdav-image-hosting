@@ -99,50 +99,26 @@ jobs:
           echo "Using AI endpoint: $API_ENDPOINT"
           echo "Using AI model: $AI_MODEL"
 
-          # 调用 AI API 生成 release notes
-          PROMPT="你是 Obsidian 插件的技术文档撰写专家。请分析以下 Git commits，生成专业的 Release Notes。
-
-要求：
-1. 先生成中文版本，然后生成英文版本，用分隔符 '---' 隔开
-2. 分类：
-   - ✨ 新功能 (New Features)
-   - 🚀 改进 (Improvements)
-   - 🐛 Bug 修复 (Bug Fixes)
-   - 📝 文档 (Documentation)
-   - 🔧 配置/工具 (Configuration/Tooling)
-3. 每条要突出用户价值
-4. 技术性修改要用通俗语言解释
-5. 格式为 Markdown，适合直接发布
-6. 如果某个分类没有内容，就不要显示该分类
-
-Commits:
-$COMMITS
-
-请生成 Release Notes（中文版在前，英文版在后，用 --- 分隔）："
-
           # 检查是否配置了 API Key
           if [ -z "$API_KEY" ]; then
             echo "Warning: RELEASE_AI_API_KEY not configured, skipping AI generation"
             RELEASE_NOTES="## 🎉 Release ${{ github.ref_name }}
 
-### 📝 Changes
+          ### 📝 Changes
 
-$COMMITS"
+          $COMMITS"
           else
+            # 构建 AI 提示词
+            PROMPT_TEXT="你是 Obsidian 插件的技术文档撰写专家。请分析以下 Git commits，生成专业的 Release Notes。要求：1. 先生成中文版本，然后生成英文版本，用分隔符 '---' 隔开 2. 分类：- ✨ 新功能 (New Features)、🚀 改进 (Improvements)、🐛 Bug 修复 (Bug Fixes)、📝 文档 (Documentation)、🔧 配置/工具 (Configuration/Tooling) 3. 每条要突出用户价值 4. 技术性修改要用通俗语言解释 5. 格式为 Markdown，适合直接发布 6. 如果某个分类没有内容，就不要显示该分类。Commits: ${COMMITS}。请生成 Release Notes（中文版在前，英文版在后，用 --- 分隔）："
+
+            # 转义为 JSON 字符串
+            PROMPT_JSON=$(printf '%s' "$PROMPT_TEXT" | jq -Rs .)
+
+            # 调用 AI API
             RESPONSE=$(curl -s "$API_ENDPOINT" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $API_KEY" \
-              -d "{
-                \"model\": \"$AI_MODEL\",
-                \"messages\": [
-                  {
-                    \"role\": \"user\",
-                    \"content\": $(echo "$PROMPT" | jq -Rs .)
-                  }
-                ],
-                \"temperature\": 0.7,
-                \"max_tokens\": 2000
-              }")
+              -d "{\"model\":\"$AI_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":$PROMPT_JSON}],\"temperature\":0.7,\"max_tokens\":2000}")
 
             # 提取 AI 生成的内容
             RELEASE_NOTES=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
@@ -153,9 +129,9 @@ $COMMITS"
               echo "API Response: $RESPONSE"
               RELEASE_NOTES="## 🎉 Release ${{ github.ref_name }}
 
-### 📝 Changes
+          ### 📝 Changes
 
-$COMMITS"
+          $COMMITS"
             fi
           fi
 
