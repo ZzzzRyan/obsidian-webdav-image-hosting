@@ -144,6 +144,21 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					})
 			);
 
+		new Setting(containerEl)
+			.setName(i18n.t("rename.batch.mode"))
+			.setDesc(i18n.t("rename.batch.mode.desc"))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("dialog", i18n.t("rename.mode.dialog"))
+					.addOption("ai", i18n.t("rename.mode.ai"))
+					.addOption("template", i18n.t("rename.mode.template"))
+					.setValue(this.plugin.settings.batchUploadRenameMode)
+					.onChange(async (value: "dialog" | "ai" | "template") => {
+						this.plugin.settings.batchUploadRenameMode = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
 		// Template settings (shown for dialog and template modes)
 		if (this.plugin.settings.renameMode === "dialog" ||
 		    this.plugin.settings.renameMode === "template") {

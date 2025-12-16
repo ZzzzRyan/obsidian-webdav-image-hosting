@@ -216,15 +216,36 @@ export class ImageHandler {
 			  }
 			: undefined;
 
-		new ImageRenameModal(
-			this.plugin.app,
-			defaultName,
-			async (fileName) => {
-				await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
-			},
-			aiCallback,
-			imageData
-		).open();
+		// Return a promise that resolves when the modal is submitted or closed
+		return new Promise<void>((resolve) => {
+			let resolved = false;
+			const safeResolve = () => {
+				if (!resolved) {
+					resolved = true;
+					resolve();
+				}
+			};
+
+			const modal = new ImageRenameModal(
+				this.plugin.app,
+				defaultName,
+				async (fileName) => {
+					await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
+					safeResolve();
+				},
+				aiCallback,
+				imageData
+			);
+
+			// Also resolve when modal is closed without submitting
+			const originalOnClose = modal.onClose.bind(modal);
+			modal.onClose = function() {
+				originalOnClose();
+				safeResolve();
+			};
+
+			modal.open();
+		});
 	}
 
 	private async handleAIMode(
@@ -467,6 +488,153 @@ export class ImageHandler {
 		} catch (error) {
 			console.error('Error uploading image:', error);
 			new Notice(`Failed to upload image: ${error.message}`);
+		}
+	}
+
+	private findAllImagesToUpload(content: string): Array<{ url: string, fullMatch: string, isLocal: boolean, fileName: string }> {
+		const images: Array<{ url: string, fullMatch: string, isLocal: boolean, fileName: string }> = [];
+		const webdavUrlPattern = this.plugin.settings.customUrlPrefix || this.plugin.settings.webdavUrl;
+
+		// Match markdown-style images: ![alt](url)
+		const mdRegex = /!\[([^\]]*)(?:\|(\d+))?\]\(([^)]+)\)/g;
+		let match;
+
+		while ((match = mdRegex.exec(content)) !== null) {
+			const url = match[3];
+			const isUrl = /^https?:\/\//i.test(url);
+
+			// Skip if already uploaded to our WebDAV
+			if (isUrl && webdavUrlPattern && url.includes(webdavUrlPattern)) {
+				continue;
+			}
+
+			// Extract filename
+			const fileName = url.includes('/') ? url.split('/').pop()! : url;
+
+			images.push({
+				url: url,
+				fullMatch: match[0],
+				isLocal: !isUrl,
+				fileName: fileName
+			});
+		}
+
+		// Match wiki-style images: ![[url]] or ![[url|size]]
+		const wikiRegex = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+
+		while ((match = wikiRegex.exec(content)) !== null) {
+			const url = match[1];
+			const isUrl = /^https?:\/\//i.test(url);
+
+			// Skip if already uploaded to our WebDAV
+			if (isUrl && webdavUrlPattern && url.includes(webdavUrlPattern)) {
+				continue;
+			}
+
+			// Extract filename
+			const fileName = url.includes('/') ? url.split('/').pop()! : url;
+
+			images.push({
+				url: url,
+				fullMatch: match[0],
+				isLocal: !isUrl,
+				fileName: fileName
+			});
+		}
+
+		return images;
+	}
+
+	async batchUploadImages(editor: Editor): Promise<void> {
+		const content = editor.getValue();
+		const imagesToUpload = this.findAllImagesToUpload(content);
+
+		if (imagesToUpload.length === 0) {
+			new Notice("No images to upload");
+			return;
+		}
+
+		// Create progress notice
+		const progressNotice = new Notice(`Preparing to upload ${imagesToUpload.length} image(s)...`, 0);
+
+		let successCount = 0;
+		let failCount = 0;
+		const originalMode = this.plugin.settings.renameMode;
+
+		try {
+			// Use batch upload rename mode
+			this.plugin.settings.renameMode = this.plugin.settings.batchUploadRenameMode;
+
+			for (let i = 0; i < imagesToUpload.length; i++) {
+				const image = imagesToUpload[i];
+
+				// Update progress
+				progressNotice.setMessage(`Uploading ${i + 1}/${imagesToUpload.length}: ${image.fileName}`);
+
+				try {
+					let imageData: ArrayBuffer;
+
+					// Get image data
+					if (image.isLocal) {
+						// Local file
+						const file = this.plugin.app.vault.getAbstractFileByPath(image.url);
+						if (!(file instanceof TFile)) {
+							throw new Error(`File not found: ${image.url}`);
+						}
+						imageData = await this.plugin.app.vault.readBinary(file);
+					} else {
+						// Network URL
+						imageData = await this.downloadImageFromUrl(image.url);
+					}
+
+					// Get current content (may have changed from previous uploads)
+					const currentContent = editor.getValue();
+
+					// Find the specific image reference in current content
+					const matchIndex = currentContent.indexOf(image.fullMatch);
+					if (matchIndex === -1) {
+						// Image reference no longer exists, skip
+						continue;
+					}
+
+					// Extract size parameter if exists
+					const sizeMatch = image.fullMatch.match(/\|(\d+)/);
+					const imageRefInfo = {
+						found: true,
+						fullMatch: image.fullMatch,
+						sizeParam: sizeMatch ? sizeMatch[1] : undefined
+					};
+
+					// Process and upload
+					await this.processImageWithMode(imageData, image.fileName, editor, undefined, imageRefInfo);
+
+					successCount++;
+
+					// Small delay to avoid overwhelming the server and allow UI updates
+					await new Promise(resolve => setTimeout(resolve, 100));
+
+				} catch (error) {
+					console.error(`Failed to upload ${image.fileName}:`, error);
+					failCount++;
+					// Continue with next image
+				}
+			}
+
+			// Final result
+			progressNotice.hide();
+			if (failCount === 0) {
+				new Notice(`✓ Successfully uploaded all ${successCount} image(s)!`);
+			} else {
+				new Notice(`Uploaded ${successCount} image(s), ${failCount} failed`);
+			}
+
+		} catch (error) {
+			progressNotice.hide();
+			console.error('Batch upload error:', error);
+			new Notice(`Batch upload failed: ${error.message}`);
+		} finally {
+			// Restore original rename mode
+			this.plugin.settings.renameMode = originalMode;
 		}
 	}
 }

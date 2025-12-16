@@ -42,6 +42,8 @@ const translations: Record<Language, Translations> = {
 		"rename.mode.dialog": "Rename Dialog",
 		"rename.mode.ai": "AI Rename",
 		"rename.mode.template": "Template Rename",
+		"rename.batch.mode": "Batch upload rename mode",
+		"rename.batch.mode.desc": "Rename mode to use when batch uploading images",
 		"rename.template": "Default image name template",
 		"rename.template.desc": "Template for auto-generated image names. Available placeholders: {timestamp}, {random}, {date}, {baseName}, {ext}",
 
@@ -133,6 +135,8 @@ const translations: Record<Language, Translations> = {
 		"rename.mode.dialog": "重命名对话框",
 		"rename.mode.ai": "AI 重命名",
 		"rename.mode.template": "模板重命名",
+		"rename.batch.mode": "批量上传重命名模式",
+		"rename.batch.mode.desc": "批量上传图片时使用的重命名模式",
 		"rename.template": "默认图片名称模板",
 		"rename.template.desc": "自动生成图片名称的模板。可用占位符：{timestamp}、{random}、{date}、{baseName}、{ext}",
 

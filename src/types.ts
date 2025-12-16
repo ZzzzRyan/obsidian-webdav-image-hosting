@@ -11,6 +11,7 @@ export interface WebDAVImageUploaderSettings {
 	showRenameDialog: boolean;
 	defaultImageName: string;
 	renameMode: RenameMode;
+	batchUploadRenameMode: RenameMode;
 	aiApiKey: string;
 	aiEndpoint: string;
 	aiModel: string;
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: WebDAVImageUploaderSettings = {
 	showRenameDialog: true,
 	defaultImageName: "image-{date}",
 	renameMode: "dialog",
+	batchUploadRenameMode: "template",
 	aiApiKey: "",
 	aiEndpoint: "https://api.openai.com",
 	aiModel: "gpt-4o-mini",
