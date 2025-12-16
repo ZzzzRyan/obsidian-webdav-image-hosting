@@ -1,5 +1,5 @@
 import { Notice, requestUrl } from "obsidian";
-import { WebDAVImageUploaderSettings, replacePlaceholders, debugLog } from "./types";
+import { WebDAVImageUploaderSettings, PlaceholderContext, replacePlaceholders, debugLog } from "./types";
 
 export class WebDAVUploader {
 	constructor(private settings: WebDAVImageUploaderSettings) {}
@@ -204,7 +204,7 @@ export class WebDAVUploader {
 		// If template already contains extension placeholder or literal extension, use it
 		let fileName = replacePlaceholders(
 			this.settings.defaultImageName,
-			originalName
+			{ originalName }
 		);
 
 		debugLog("WebDAV", "After placeholder replacement:", fileName);

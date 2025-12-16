@@ -1,5 +1,5 @@
 import { requestUrl, Notice } from "obsidian";
-import { WebDAVImageUploaderSettings, normalizeAIEndpoint, replacePlaceholders, debugLog } from "./types";
+import { WebDAVImageUploaderSettings, PlaceholderContext, normalizeAIEndpoint, replacePlaceholders, debugLog } from "./types";
 
 export class AIRenameService {
 	constructor(private settings: WebDAVImageUploaderSettings) {}
@@ -60,7 +60,7 @@ export class AIRenameService {
 		}
 	}
 
-	async generateFileName(imageData: ArrayBuffer): Promise<string> {
+	async generateFileName(imageData: ArrayBuffer, existingImages?: string[]): Promise<string> {
 		if (!this.settings.aiApiKey) {
 			new Notice("AI API Key not configured");
 			throw new Error("AI API Key not configured");
@@ -78,8 +78,10 @@ export class AIRenameService {
 			// Detect image format
 			const imageFormat = this.detectImageFormat(imageData);
 
-			// Process prompt with placeholders (no original name for AI)
-			const processedPrompt = replacePlaceholders(this.settings.aiPrompt);
+			// Process prompt with placeholders including existing images context
+			const processedPrompt = replacePlaceholders(this.settings.aiPrompt, {
+				existingImages
+			});
 
 			// Prepare the API request body
 			const requestBody = {

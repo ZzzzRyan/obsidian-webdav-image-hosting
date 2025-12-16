@@ -93,6 +93,33 @@ export class ImageHandler {
 		return imageExtensions.includes(ext);
 	}
 
+	private extractExistingUploadedImages(content: string): string[] {
+		const imageNames: string[] = [];
+		const webdavUrlPattern = this.plugin.settings.customUrlPrefix || this.plugin.settings.webdavUrl;
+
+		// Match markdown images with URLs containing webdav prefix
+		// ![alt](https://example.com/image.jpg) or ![alt|300](https://example.com/image.jpg)
+		const mdRegex = /!\[([^\]]*)(?:\|\d+)?\]\((https?:\/\/[^)]+)\)/g;
+		let match;
+
+		while ((match = mdRegex.exec(content)) !== null) {
+			const imageUrl = match[2];
+			// Check if this URL is from our WebDAV/CDN (uploaded images)
+			if (webdavUrlPattern && imageUrl.includes(webdavUrlPattern)) {
+				// Extract filename from URL
+				const urlParts = imageUrl.split('/');
+				const fileName = urlParts[urlParts.length - 1];
+				// Remove query parameters and decode
+				const cleanName = decodeURIComponent(fileName.split('?')[0]);
+				if (cleanName && !imageNames.includes(cleanName)) {
+					imageNames.push(cleanName);
+				}
+			}
+		}
+
+		return imageNames;
+	}
+
 	private findImageReference(
 		content: string,
 		fileName: string,
@@ -179,10 +206,13 @@ export class ImageHandler {
 	): Promise<void> {
 		const defaultName = this.plugin.uploader.generateFileName(originalName);
 
+		// Extract existing uploaded images for context
+		const existingImages = this.extractExistingUploadedImages(editor.getValue());
+
 		// Create AI rename callback if AI is configured
 		const aiCallback = this.plugin.settings.aiApiKey
 			? async () => {
-					return await this.aiRenameService.generateFileName(imageData);
+					return await this.aiRenameService.generateFileName(imageData, existingImages);
 			  }
 			: undefined;
 
@@ -206,7 +236,10 @@ export class ImageHandler {
 	): Promise<void> {
 		try {
 			new Notice("🤖 AI is generating filename...");
-			const aiName = await this.aiRenameService.generateFileName(imageData);
+
+			// Extract existing uploaded images for context
+			const existingImages = this.extractExistingUploadedImages(editor.getValue());
+			const aiName = await this.aiRenameService.generateFileName(imageData, existingImages);
 
 			// Add extension
 			const ext = originalName.match(/\.[^.]+$/)?.[0] || ".png";
