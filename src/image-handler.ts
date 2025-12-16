@@ -370,18 +370,13 @@ export class ImageHandler {
 				const imageInfo = this.getImageAtCursor(editor, cursor);
 
 				if (imageInfo) {
+					const imageType = imageInfo.isUrl ? 'URL' : 'local';
 					menu.addItem((item) => {
 						item
-							.setTitle(`Upload "${imageInfo.fileName}" to WebDAV`)
+							.setTitle(`Upload "${imageInfo.fileName}" to WebDAV (${imageType})`)
 							.setIcon("upload")
 							.onClick(async () => {
-								// Find the actual file in vault
-								const file = this.plugin.app.vault.getAbstractFileByPath(imageInfo.filePath);
-								if (file instanceof TFile) {
-									await this.handleLocalImageUpload(file, editor);
-								} else {
-									new Notice(`Image file not found: ${imageInfo.filePath}`);
-								}
+								await this.handleImageLinkUpload(imageInfo, editor);
 							});
 					});
 				}
@@ -389,7 +384,7 @@ export class ImageHandler {
 		);
 	}
 
-	private getImageAtCursor(editor: Editor, cursor: { line: number, ch: number }): { fileName: string, filePath: string } | null {
+	private getImageAtCursor(editor: Editor, cursor: { line: number, ch: number }): { fileName: string, filePath: string, isUrl: boolean, fullMatch: string } | null {
 		const line = editor.getLine(cursor.line);
 		const ch = cursor.ch;
 
@@ -402,11 +397,12 @@ export class ImageHandler {
 			if (ch >= start && ch <= end) {
 				const path = match[1];
 				const fileName = path.includes('/') ? path.split('/').pop()! : path;
-				return { fileName, filePath: path };
+				const isUrl = /^https?:\/\//i.test(path);
+				return { fileName, filePath: path, isUrl, fullMatch: match[0] };
 			}
 		}
 
-		// Match markdown-style image: ![alt](image.png)
+		// Match markdown-style image: ![alt](image.png) or ![alt](https://...)
 		const mdRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
 		while ((match = mdRegex.exec(line)) !== null) {
 			const start = match.index;
@@ -414,10 +410,63 @@ export class ImageHandler {
 			if (ch >= start && ch <= end) {
 				const path = match[2];
 				const fileName = path.includes('/') ? path.split('/').pop()! : path;
-				return { fileName, filePath: path };
+				const isUrl = /^https?:\/\//i.test(path);
+				return { fileName, filePath: path, isUrl, fullMatch: match[0] };
 			}
 		}
 
 		return null;
+	}
+
+	private async downloadImageFromUrl(url: string): Promise<ArrayBuffer> {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+			}
+			const contentType = response.headers.get('content-type');
+			if (!contentType || !contentType.startsWith('image/')) {
+				throw new Error('URL does not point to an image');
+			}
+			return await response.arrayBuffer();
+		} catch (error) {
+			throw new Error(`Failed to download image: ${error.message}`);
+		}
+	}
+
+	private async handleImageLinkUpload(imageInfo: { fileName: string, filePath: string, isUrl: boolean, fullMatch: string }, editor: Editor): Promise<void> {
+		try {
+			if (imageInfo.isUrl) {
+				// Download the image from URL
+				new Notice('Downloading image from URL...');
+				const imageData = await this.downloadImageFromUrl(imageInfo.filePath);
+
+				// Get the image reference info for replacement
+				const imageRefInfo = {
+					found: true,
+					fullMatch: imageInfo.fullMatch,
+					sizeParam: undefined as string | undefined
+				};
+
+				// Extract size parameter if exists (wiki style)
+				const sizeMatch = imageInfo.fullMatch.match(/\|(\d+)/);
+				if (sizeMatch) {
+					imageRefInfo.sizeParam = sizeMatch[1];
+				}
+
+				await this.processImageWithMode(imageData, imageInfo.fileName, editor, undefined, imageRefInfo);
+			} else {
+				// Handle local file
+				const file = this.plugin.app.vault.getAbstractFileByPath(imageInfo.filePath);
+				if (file instanceof TFile) {
+					await this.handleLocalImageUpload(file, editor);
+				} else {
+					new Notice(`Image file not found: ${imageInfo.filePath}`);
+				}
+			}
+		} catch (error) {
+			console.error('Error uploading image:', error);
+			new Notice(`Failed to upload image: ${error.message}`);
+		}
 	}
 }
