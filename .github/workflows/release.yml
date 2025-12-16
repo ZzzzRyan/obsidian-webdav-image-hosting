@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整的 git 历史，包括所有 tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -53,14 +55,121 @@ jobs:
             zip obsidian-webdav-image-hosting.zip main.js manifest.json
           fi
 
+      - name: Generate Release Notes with AI
+        id: generate_notes
+        run: |
+          # 获取当前 tag
+          CURRENT_TAG="${{ github.ref_name }}"
+
+          # 获取所有 tags 并排序，找到上一个 tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep -A1 "^${CURRENT_TAG}$" | tail -n1)
+
+          # 如果 PREV_TAG 等于 CURRENT_TAG，说明这是第一个 tag
+          if [ "$PREV_TAG" = "$CURRENT_TAG" ] || [ -z "$PREV_TAG" ]; then
+            echo "First release, getting all commits"
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Getting commits from ${PREV_TAG} to ${CURRENT_TAG}"
+            COMMITS=$(git log ${PREV_TAG}..${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # 如果没有 commits，可能是因为只打了 tag 没有新提交
+          if [ -z "$COMMITS" ]; then
+            echo "No new commits found, using current commit"
+            COMMITS=$(git log -1 --pretty=format:"- %s (%h)")
+          fi
+
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # 配置 AI 服务参数（支持自定义）
+          API_ENDPOINT="${{ secrets.RELEASE_AI_API_ENDPOINT }}"
+          API_KEY="${{ secrets.RELEASE_AI_API_KEY }}"
+          AI_MODEL="${{ secrets.RELEASE_AI_MODEL }}"
+
+          # 使用默认值（OpenAI）如果未配置
+          if [ -z "$API_ENDPOINT" ]; then
+            API_ENDPOINT="https://api.openai.com/v1/chat/completions"
+          fi
+          if [ -z "$AI_MODEL" ]; then
+            AI_MODEL="gpt-4o-mini"
+          fi
+
+          echo "Using AI endpoint: $API_ENDPOINT"
+          echo "Using AI model: $AI_MODEL"
+
+          # 调用 AI API 生成 release notes
+          PROMPT="你是 Obsidian 插件的技术文档撰写专家。请分析以下 Git commits，生成专业的 Release Notes。
+
+要求：
+1. 先生成中文版本，然后生成英文版本，用分隔符 '---' 隔开
+2. 分类：
+   - ✨ 新功能 (New Features)
+   - 🚀 改进 (Improvements)
+   - 🐛 Bug 修复 (Bug Fixes)
+   - 📝 文档 (Documentation)
+   - 🔧 配置/工具 (Configuration/Tooling)
+3. 每条要突出用户价值
+4. 技术性修改要用通俗语言解释
+5. 格式为 Markdown，适合直接发布
+6. 如果某个分类没有内容，就不要显示该分类
+
+Commits:
+$COMMITS
+
+请生成 Release Notes（中文版在前，英文版在后，用 --- 分隔）："
+
+          # 检查是否配置了 API Key
+          if [ -z "$API_KEY" ]; then
+            echo "Warning: RELEASE_AI_API_KEY not configured, skipping AI generation"
+            RELEASE_NOTES="## 🎉 Release ${{ github.ref_name }}
+
+### 📝 Changes
+
+$COMMITS"
+          else
+            RESPONSE=$(curl -s "$API_ENDPOINT" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $API_KEY" \
+              -d "{
+                \"model\": \"$AI_MODEL\",
+                \"messages\": [
+                  {
+                    \"role\": \"user\",
+                    \"content\": $(echo "$PROMPT" | jq -Rs .)
+                  }
+                ],
+                \"temperature\": 0.7,
+                \"max_tokens\": 2000
+              }")
+
+            # 提取 AI 生成的内容
+            RELEASE_NOTES=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
+
+            # 如果 AI 调用失败，使用备用格式（不显示失败信息）
+            if [ -z "$RELEASE_NOTES" ] || [ "$RELEASE_NOTES" = "null" ]; then
+              echo "AI generation failed, using fallback format"
+              echo "API Response: $RESPONSE"
+              RELEASE_NOTES="## 🎉 Release ${{ github.ref_name }}
+
+### 📝 Changes
+
+$COMMITS"
+            fi
+          fi
+
+          # 保存到输出
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: |
-            自动构建的 Obsidian 插件发布包。
-            对应 tag：${{ github.ref_name }}
+          body: ${{ steps.generate_notes.outputs.notes }}
           draft: false
           prerelease: false
           files: obsidian-webdav-image-hosting.zip
