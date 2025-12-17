@@ -1,189 +1,287 @@
 # WebDAV Image Hosting
 
-一个 Obsidian 插件，将图片自动上传到 WebDAV 图床，支持多种智能重命名方式和自定义 URL 链接。
+An Obsidian plugin that automatically uploads images to WebDAV servers with intelligent renaming and custom URL support.
+
+一个 Obsidian 插件，将图片自动上传到 WebDAV 服务器，支持智能重命名和自定义 URL。
+
+---
+
+## ✨ Features
+
+### 📤 Upload Images to WebDAV
+- **Paste/Drop**: Auto-upload clipboard or dragged images
+- **Context Menu**: Right-click any image link to upload
+- **Batch Upload**: Upload all local and external images in one click
+- Works on desktop and mobile
+- Supports JPG, PNG, GIF, WebP, BMP, SVG
+
+### ✏️ Three Renaming Modes
+1. **Dialog**: Manual rename with preview and AI assist button
+2. **AI**: Auto-generate names based on image content and existing file patterns
+3. **Template**: Custom patterns with placeholders (`{timestamp}`, `{date}`, `{random}`)
+
+### 🌐 Custom Final URLs
+- Configure URL prefix for inserted image links (e.g., CDN or reverse proxy)
+- Separate WebDAV storage location from access URL
+- Support for custom domain names
+
+---
 
 ## ✨ 核心功能
 
-### 📤 灵活的图片上传方式
+### 📤 WebDAV 图片上传
 - **粘贴/拖放**：自动上传剪贴板或拖入的图片
-- **右键单图上传**：编辑器内右键本地/网络图片链接直接上传
-- **批量上传**：一键上传文档中所有本地和外部网络图片
+- **右键菜单**：右键任意图片链接直接上传
+- **批量上传**：一键上传所有本地和外部图片
 - 兼容桌面端和移动端
-- 支持多种图片格式（JPG, PNG, GIF, WebP, BMP, SVG）
+- 支持 JPG、PNG、GIF、WebP、BMP、SVG
 
-### ✏️ 三种智能重命名方式
-1. **对话框模式**：弹窗手动重命名，显示图片预览，可一键 AI 辅助
-2. **AI 模式**：自动识别图片内容并智能命名，参考文档已有图片保持风格一致
-3. **模板模式**：使用自定义模板自动生成（时间戳、日期、随机字符）
-
-**独立的批量上传模式**：可为批量上传设置不同的重命名策略
+### ✏️ 三种重命名方式
+1. **对话框**：手动重命名，显示预览，可用 AI 辅助
+2. **AI 模式**：根据图片内容和现有文件风格自动生成名称
+3. **模板**：自定义模板（`{timestamp}`、`{date}`、`{random}` 等占位符）
 
 ### 🌐 自定义最终链接
-- 自由配置插入笔记的图片 URL 前缀
-- 支持 CDN 加速链接
-- 支持反向代理自定义域名
-- WebDAV 存储位置与访问链接完全分离
+- 配置插入笔记的图片 URL 前缀（如 CDN 或反向代理）
+- WebDAV 存储位置与访问链接分离
+- 支持自定义域名
+
+---
+
+## 📦 Installation
+
+### From Community Plugins (Recommended)
+1. Open **Settings** → **Community plugins**
+2. Search for "WebDAV Image Hosting"
+3. Click **Install**, then **Enable**
+
+### Manual Installation
+1. Download `obsidian-webdav-image-hosting.zip` from releases
+2. Extract to `.obsidian/plugins/` in your vault
+3. Enable the plugin in **Settings** → **Community plugins**
+
+## ⚙️ Configuration
+
+### WebDAV Server Setup
+
+| Setting | Description | Example |
+|---------|-------------|---------|
+| WebDAV URL | Server address | `https://your-server.com/dav` |
+| Username | Account name | `your-username` |
+| Password | Account password | `your-password` |
+| Upload Path | Storage path | `/obsidian/images` |
+
+**Compatible Services**: Nextcloud, ownCloud, Synology NAS, 坚果云 (Nutstore), InfiniCLOUD, and any WebDAV-compliant server.
+
+Click **Test** to verify connection.
+
+### Renaming Modes
+
+| Mode | Description |
+|------|-------------|
+| **Dialog** | Manual input with image preview and AI assist button |
+| **AI** | Auto-generate names using GPT-4 Vision based on image content |
+| **Template** | Custom pattern with placeholders: `{timestamp}`, `{date}`, `{random}`, `{baseName}` |
+
+**Template Examples**:
+- `img-{timestamp}` → `img-1701234567890.png`
+- `{date}-{random}` → `20251217143055-a7b3c9.png`
+
+**AI Configuration** (for AI mode):
+- API Key, Endpoint, Model (e.g., `gpt-4o-mini`)
+- Prompt supports `{existing_images}` to maintain naming consistency
+
+### Custom URL Prefix
+
+Control the final image URL inserted into your notes.
+
+**Examples**:
+
+| WebDAV Storage | Custom URL Prefix | Result |
+|----------------|-------------------|--------|
+| `https://dav.server.com/uploads` | `https://dav.server.com/uploads` | Direct WebDAV access |
+| `https://webdav.internal.com/img` | `https://cdn.mycdn.com/img` | CDN acceleration |
+| `https://internal.dav.com/files` | `https://public.example.com/files` | Reverse proxy |
+
+---
 
 ## 📦 安装
 
-1. 下载发布包中的压缩包`obsidian-webdav-image-hosting.zip`
-2. 在 Obsidian 的库文件夹下打开或创建 `.obsidian/plugins` 目录
-3. 将压缩包解压到该目录，解压后该目录下应该多出一个 `obsidian-webdav-image-hosting` 文件夹
-4. 在 Obsidian 设置中启用插件
+### 从社区插件安装（推荐）
+1. 打开 **设置** → **社区插件**
+2. 搜索「WebDAV Image Hosting」
+3. 点击 **安装**，然后 **启用**
 
-## ⚙️ 快速配置
+### 手动安装
+1. 下载发布包中的 `obsidian-webdav-image-hosting.zip`
+2. 解压到库文件夹的 `.obsidian/plugins/` 目录
+3. 在 **设置** → **社区插件** 中启用
 
-### 1. WebDAV 基础配置
+## ⚙️ 配置
+
+### WebDAV 服务器设置
 
 | 配置项 | 说明 | 示例 |
 |--------|------|------|
-| WebDAV URL | 服务器地址 | `https://dav.example.com` |
-| 用户名 | 账号 | `your-username` |
-| 密码 | 密码 | `your-password` |
-| 上传路径 | 图片存储路径 | `/images` |
+| WebDAV URL | 服务器地址 | `https://your-server.com/dav` |
+| 用户名 | 账号名称 | `your-username` |
+| 密码 | 账号密码 | `your-password` |
+| 上传路径 | 存储路径 | `/obsidian/images` |
 
-配置完成后点击"Test"按钮测试连接。
+**兼容服务**：Nextcloud、ownCloud、群晖 NAS、坚果云、InfiniCLOUD 及任何 WebDAV 兼容服务器。
 
-### 2. 选择重命名方式
+配置完成后点击 **Test** 测试连接。
 
-**单图上传模式**：
+### 重命名模式
 
-| 模式 | 特点 | 适用场景 |
-|------|------|----------|
-| 对话框 | 手动输入 + 图片预览 + AI 辅助按钮 | 需要精确控制文件名 |
-| AI | 完全自动 AI 识别内容命名 | 快速上传，自动保持命名风格 |
-| 模板 | 自定义规则自动生成 | 统一命名规范 |
-
-**批量上传模式**：独立设置，推荐使用"模板"或"AI"模式
-
-**可用占位符**：
-- `{timestamp}` - Unix 时间戳
-- `{date}` - 格式化日期时间（YYYYMMDDHHmmss）
-- `{random}` - 6位随机字符
-- `{baseName}` - 原文件名（不含扩展名）
-- `{existing_images}` - 文档中已上传图片列表（AI 模式可用）
+| 模式 | 说明 |
+|------|------|
+| **对话框** | 手动输入，带图片预览和 AI 辅助按钮 |
+| **AI** | 使用 GPT-4 Vision 根据图片内容自动生成名称 |
+| **模板** | 自定义模板，支持占位符：`{timestamp}`、`{date}`、`{random}`、`{baseName}` |
 
 **模板示例**：
-- `image-{timestamp}` → `image-1701234567890.png`
-- `{date}-{random}` → `20251203144201-abc123.png`
+- `img-{timestamp}` → `img-1701234567890.png`
+- `{date}-{random}` → `20251217143055-a7b3c9.png`
 
-**AI 配置**（选用 AI 模式时需要）：
-- API Key：OpenAI 或兼容服务的密钥
-- Endpoint：API 地址（默认 OpenAI）
-- Model：模型名称（如 `gpt-4o-mini`）
-- 提示词：支持 `{existing_images}` 占位符，让 AI 参考已有命名风格
+**AI 配置**（AI 模式需要）：
+- API Key、Endpoint、Model（如 `gpt-4o-mini`）
+- 提示词支持 `{existing_images}` 以保持命名一致性
 
-### 3. 自定义最终链接
+### 自定义 URL 前缀
 
-通过"自定义 URL 前缀"控制插入笔记的图片链接格式。
+控制插入笔记的最终图片链接。
 
 **示例**：
 
-| WebDAV 存储位置 | 上传路径 | 自定义 URL 前缀 | 最终链接 |
-|----------------|----------|----------------|----------|
-| `https://dav.example.com` | `/images` | `https://dav.example.com/images` | 直接访问 WebDAV |
-| `https://webdav.server.com` | `/img` | `https://cdn.mycdn.com/img` | 通过 CDN 访问 |
-| `https://internal.dav.com` | `/files` | `https://public.example.com/files` | 反向代理域名 |
+| WebDAV 存储 | 自定义 URL 前缀 | 结果 |
+|-------------|----------------|------|
+| `https://dav.server.com/uploads` | `https://dav.server.com/uploads` | 直接访问 WebDAV |
+| `https://webdav.internal.com/img` | `https://cdn.mycdn.com/img` | CDN 加速 |
+| `https://internal.dav.com/files` | `https://public.example.com/files` | 反向代理 |
+
+---
+
+## 🚀 Usage
+
+### Paste or Drop Images
+1. Copy/paste or drag images into editor
+2. Plugin auto-renames based on your chosen mode (Dialog/AI/Template)
+3. Uploads to WebDAV and inserts custom URL
+
+### Right-Click Upload
+1. Place cursor on any image link (local or external URL)
+2. Right-click → **"Upload [filename] to WebDAV"**
+3. Link auto-replaced with WebDAV URL
+
+### Batch Upload
+- Right-click in editor → **"Batch upload images to WebDAV"**
+- Or command palette (Ctrl/Cmd+P) → **"Batch upload"**
+- Uploads all local and external images, skips already-uploaded ones
+
+**Example**:
+```markdown
+Before:
+![](local/photo.jpg)
+![](https://external.com/image.png)
+
+After:
+![](https://cdn.myserver.com/images/photo-20251217.jpg)
+![](https://cdn.myserver.com/images/image-20251217.png)
+```
+
+---
 
 ## 🚀 使用方法
 
-### 方式 1：粘贴/拖放图片
-1. 复制图片或从文件管理器拖入编辑器
-2. 根据配置的重命名模式自动处理：
-   - **对话框**：弹窗显示图片预览，手动输入名称或点击 🤖 AI 按钮辅助
-   - **AI**：自动识别图片内容并生成文件名
-   - **模板**：按预设规则自动生成
-3. 自动上传到 WebDAV 并插入自定义链接
+### 粘贴或拖放图片
+1. 复制/粘贴或拖动图片到编辑器
+2. 根据选择的模式自动重命名（对话框/AI/模板）
+3. 上传到 WebDAV 并插入自定义 URL
 
-### 方式 2：右键单图上传
-1. 将光标放在编辑器中的图片链接上（本地或网络图片）
-2. 右键选择 **"Upload [filename] to WebDAV"**
-3. 支持本地图片路径和外部网络 URL
-4. 上传完成后自动替换为 WebDAV 链接，保持光标位置不变
+### 右键上传
+1. 将光标放在任意图片链接上（本地或外部 URL）
+2. 右键 → **「Upload [filename] to WebDAV」**
+3. 链接自动替换为 WebDAV URL
 
-### 方式 3：批量上传
-1. 在编辑器右键选择 **"Batch upload images to WebDAV"**
-2. 或使用命令面板（Ctrl/Cmd+P）搜索 **"Batch upload"**
-3. 自动识别文档中所有未上传的本地和外部网络图片
-4. 逐个上传并替换链接，实时显示进度
-5. 支持使用独立的批量上传重命名模式
+### 批量上传
+- 编辑器内右键 → **「Batch upload images to WebDAV」**
+- 或命令面板（Ctrl/Cmd+P）→ **「Batch upload」**
+- 上传所有本地和外部图片，跳过已上传的
 
-**完整示例**：
-```
-WebDAV: https://webdav.myserver.com/obsidian/images
-自定义前缀: https://cdn.example.com/obsidian/images
+**示例**：
+```markdown
+上传前：
+![](local/photo.jpg)
+![](https://external.com/image.png)
 
-粘贴图片 → 重命名为 sunset.png
-存储位置：https://webdav.myserver.com/obsidian/images/sunset.png
-插入链接：![](https://cdn.example.com/obsidian/images/sunset.png)
+上传后：
+![](https://cdn.myserver.com/images/photo-20251217.jpg)
+![](https://cdn.myserver.com/images/image-20251217.png)
 ```
 
-**批量上传示例**：
-```
-文档中有：
-![](local/photo1.jpg)
-![](https://external.com/photo2.png)
-![](https://cdn.example.com/images/already.jpg)  ← 已上传，跳过
+---
 
-批量上传后：
-![](https://cdn.example.com/images/photo1_20231216.jpg)
-![](https://cdn.example.com/images/photo2_20231216.png)
-![](https://cdn.example.com/images/already.jpg)  ← 保持不变
-```
+## 💡 Advanced Features
+
+- **Image Preview**: Dialog mode shows thumbnail (max 300px) for easier renaming
+- **AI Context Awareness**: AI references existing image names to maintain consistent naming style
+- **External Image Support**: Right-click any external URL to migrate to your WebDAV server
+- **Safe Editing**: Batch upload doesn't interrupt editing; cursor position preserved
+
+## ❓ FAQ
+
+**Upload fails?**
+- Verify WebDAV URL format (must include `http://` or `https://`)
+- Check username, password, and path
+- Use **Test** button to verify connection
+
+**Images not displaying?**
+- Verify custom URL prefix is correct
+- Test image URL directly in browser
+- Check WebDAV server access permissions
+
+**AI naming fails?**
+- Verify API Key and Endpoint
+- Ensure model supports vision (e.g., `gpt-4o-mini`)
+- Plugin auto-falls back to template mode on AI failure
+
+---
 
 ## 💡 高级特性
 
-### 图片预览
-重命名对话框中会显示图片缩略图（最大 300px），方便查看后命名
-
-### AI 命名上下文
-AI 会自动参考文档中已上传图片的命名风格：
-```
-已有：blog_header_20231215.png, blog_content_20231215.png
-新图：AI 自动命名为 blog_footer_20231216.png  ← 保持前缀和风格
-```
-
-### 网络图片支持
-直接右键上传外部网络图片到自己的图床：
-```
-![](https://example.com/external.jpg)  → 右键上传
-![](https://cdn.example.com/images/external_20231216.jpg)  ← 转换为自己的图床
-```
-
-### 编辑安全
-- 批量上传时可边上传边编辑文档
-- 更新链接时光标位置不变，视图不跳转
-- 使用精确替换，不影响其他内容
+- **图片预览**：对话框模式显示缩略图（最大 300px），方便命名
+- **AI 上下文感知**：AI 参考现有图片名称以保持命名风格一致
+- **外部图片支持**：右键任意外部 URL 即可迁移到你的 WebDAV 服务器
+- **安全编辑**：批量上传不中断编辑；光标位置保持不变
 
 ## ❓ 常见问题
 
 **上传失败？**
-- 检查 WebDAV URL 格式（需包含 `http://` 或 `https://`）
+- 检查 WebDAV URL 格式（必须包含 `http://` 或 `https://`）
 - 验证用户名、密码和路径
-- 使用"Test"按钮测试连接
+- 使用 **Test** 按钮验证连接
 
 **图片无法显示？**
 - 验证自定义 URL 前缀是否正确
-- 在浏览器直接访问图片链接测试
+- 在浏览器中直接测试图片 URL
 - 检查 WebDAV 服务器访问权限
 
 **AI 命名失败？**
-- 检查 API Key 和 Endpoint 是否正确
-- 确认模型支持图片识别（如 `gpt-4o-mini`）
-- AI 失败会自动回退到模板模式
+- 验证 API Key 和 Endpoint
+- 确保模型支持视觉识别（如 `gpt-4o-mini`）
+- AI 失败时插件自动回退到模板模式
 
-**批量上传太慢？**
-- 建议使用"模板"或"AI"模式，避免使用"对话框"模式
-- 对话框模式会逐个弹窗等待输入，适合少量精确重命名
+---
 
-## 🛠️ 开发
+## 🛠️ Development
 
 ```bash
-npm install          # 安装依赖
-npm run dev          # 开发模式（监听文件变化）
-npm run build        # 生产构建
+npm install    # Install dependencies
+npm run dev    # Watch mode
+npm run build  # Production build
 ```
 
-## 📄 许可证
+## 📄 License
 
 MIT License
