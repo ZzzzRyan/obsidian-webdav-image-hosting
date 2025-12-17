@@ -148,6 +148,10 @@ jobs:
           body: ${{ steps.generate_notes.outputs.notes }}
           draft: false
           prerelease: false
-          files: obsidian-webdav-image-hosting.zip
+          files: |
+            obsidian-webdav-image-hosting.zip
+            main.js
+            manifest.json
+            styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
