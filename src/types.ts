@@ -30,13 +30,13 @@ export const DEFAULT_SETTINGS: WebDAVImageUploaderSettings = {
 	webdavPath: "/images",
 	customUrlPrefix: "https://your-cdn.com/images",
 	showRenameDialog: true,
-	defaultImageName: "image-{date}",
+	defaultImageName: "image-{datetime}",
 	renameMode: "dialog",
 	batchUploadRenameMode: "template",
 	aiApiKey: "",
 	aiEndpoint: "https://api.openai.com",
 	aiModel: "gpt-4o-mini",
-	aiPrompt: "Analyze this image and generate a filename.\nRules:\n1. Identify 2-3 lowercase English words describing the content, ordered from broad category to specific detail.\n2. Join them with underscores.\n3. ALWAYS append the fixed suffix \"_{date}\" at the end.\n4. Existing images in this document: {existing_images}. Consider these names to maintain naming consistency.\nOutput ONLY the final string (e.g., \"broad_specific_detail_{date}\").",
+	aiPrompt: "Analyze this image and generate a filename.\nRules:\n1. Identify 2-3 lowercase English words describing the content, ordered from broad category to specific detail.\n2. Join them with underscores.\n3. ALWAYS append the fixed suffix \"_{datetime}\" at the end.\n4. Existing images in this document: {existing_images}. Consider these names to maintain naming consistency.\nOutput ONLY the final string (e.g., \"broad_specific_detail_{datetime}\").",
 	aiCompressImage: true,
 	uploadLocalImages: true,
 	localFileHandling: "nothing",
@@ -92,7 +92,7 @@ export function replacePlaceholders(
 	const existingImages = context?.existingImages || [];
 	const timestamp = Date.now().toString();
 	const randomStr = Math.random().toString(36).substring(2, 8);
-	const date = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+	const datetime = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
 
 	let baseName = "";
 	let ext = "";
@@ -113,13 +113,13 @@ export function replacePlaceholders(
 	debugLog("[Placeholders] Replacing:", {
 		template,
 		originalName,
-		values: { timestamp, randomStr, date, baseName, ext, existingImagesList }
+		values: { timestamp, randomStr, datetime, baseName, ext, existingImagesList }
 	});
 
 	const result = template
 		.replace(/\{timestamp\}/g, timestamp)
 		.replace(/\{random\}/g, randomStr)
-		.replace(/\{date\}/g, date)
+		.replace(/\{datetime\}/g, datetime)
 		.replace(/\{baseName\}/g, baseName)
 		.replace(/\{ext\}/g, ext)
 		.replace(/\{existing_images\}/g, existingImagesList);

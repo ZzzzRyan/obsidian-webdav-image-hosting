@@ -45,7 +45,7 @@ const translations: Record<Language, Translations> = {
 		"rename.batch.mode": "Batch upload rename mode",
 		"rename.batch.mode.desc": "Rename mode to use when batch uploading images",
 		"rename.template": "Default image name template",
-		"rename.template.desc": "Template for auto-generated image names. Available placeholders: {timestamp}, {random}, {date}, {baseName}, {ext}",
+		"rename.template.desc": "Template for auto-generated image names. Available placeholders: {timestamp}, {random}, {datetime}, {baseName}, {ext}",
 
 		// AI settings
 		"ai.key": "AI API Key",
@@ -55,7 +55,7 @@ const translations: Record<Language, Translations> = {
 		"ai.model": "AI Model",
 		"ai.model.desc": "Model name (e.g., gpt-4o-mini, gpt-4-vision-preview)",
 		"ai.prompt": "AI Prompt",
-		"ai.prompt.desc": "Custom prompt for AI image naming. Available placeholders: {timestamp}, {random}, {date}",
+		"ai.prompt.desc": "Custom prompt for AI image naming. Available placeholders: {timestamp}, {random}, {datetime}, {existing_images}",
 		"ai.compress": "Compress images for AI",
 		"ai.compress.desc": "Compress images before sending to AI to reduce costs (recommended for large images)",
 		"ai.test": "Test AI connection",
@@ -138,7 +138,7 @@ const translations: Record<Language, Translations> = {
 		"rename.batch.mode": "批量上传重命名模式",
 		"rename.batch.mode.desc": "批量上传图片时使用的重命名模式",
 		"rename.template": "默认图片名称模板",
-		"rename.template.desc": "自动生成图片名称的模板。可用占位符：{timestamp}、{random}、{date}、{baseName}、{ext}",
+		"rename.template.desc": "自动生成图片名称的模板。可用占位符：{timestamp}、{random}、{datetime}、{baseName}、{ext}",
 
 		// AI 设置
 		"ai.key": "AI API 密钥",
@@ -148,7 +148,7 @@ const translations: Record<Language, Translations> = {
 		"ai.model": "AI 模型",
 		"ai.model.desc": "模型名称（例如：gpt-4o-mini、gpt-4-vision-preview）",
 		"ai.prompt": "AI 提示词",
-		"ai.prompt.desc": "用于 AI 图片命名的自定义提示词。可用占位符：{timestamp}、{random}、{date}",
+		"ai.prompt.desc": "用于 AI 图片命名的自定义提示词。可用占位符：{timestamp}、{random}、{datetime}、{existing_images}",
 		"ai.compress": "压缩图片后发送给 AI",
 		"ai.compress.desc": "发送给 AI 前压缩图片以降低成本（推荐用于大图片）",
 		"ai.test": "测试 AI 连接",
