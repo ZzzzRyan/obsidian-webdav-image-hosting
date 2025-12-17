@@ -1,17 +1,54 @@
 /*
 WebDAV Image Uploader Styles
+Follows Obsidian style conventions using CSS variables
 */
 
-/* AI Rename Button */
+/* ===== Modal Styles ===== */
+.image-rename-modal {
+    width: 600px;
+    max-width: 90vw;
+}
+
+/* ===== Thumbnail Container ===== */
+.image-rename-thumbnail {
+    text-align: center;
+    margin-bottom: var(--size-4-4);
+    padding: var(--size-4-3);
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-m);
+}
+
+.image-rename-thumbnail img {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: var(--radius-s);
+    border: 1px solid var(--background-modifier-border);
+}
+
+/* ===== Input Container ===== */
+.image-rename-input-container .setting-item-control {
+    display: flex;
+    align-items: center;
+    gap: var(--size-4-2);
+}
+
+.image-rename-input-container input[type="text"] {
+    width: 350px;
+    max-width: 100%;
+}
+
+/* ===== AI Rename Button ===== */
 .ai-rename-button {
-    padding: 4px 12px;
-    border-radius: 4px;
+    padding: var(--size-2-1) var(--size-4-3);
+    border-radius: var(--radius-s);
     border: 1px solid var(--interactive-normal);
     background-color: var(--interactive-normal);
     color: var(--text-on-accent);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--font-ui-small);
     transition: all 0.2s ease;
+    margin-left: var(--size-4-2);
 }
 
 .ai-rename-button:hover {
@@ -24,10 +61,36 @@ WebDAV Image Uploader Styles
     cursor: not-allowed;
 }
 
-/* Image Rename Input Container */
-.image-rename-input-container .setting-item-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* ===== Preview Element ===== */
+.image-rename-preview {
+    margin-top: var(--size-4-2);
+    padding: var(--size-4-2) var(--size-4-3);
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-s);
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+    word-break: break-all;
+}
+
+/* ===== Settings Styles ===== */
+.webdav-settings textarea {
+    width: 100%;
+    resize: vertical;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .image-rename-modal {
+        width: 100%;
+        max-width: 95vw;
+    }
+
+    .image-rename-input-container input[type="text"] {
+        width: 100%;
+    }
+
+    .image-rename-thumbnail img {
+        max-height: 200px;
+    }
 }
 

@@ -14,6 +14,7 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		containerEl.addClass("webdav-settings");
 
 		containerEl.createEl("h2", { text: i18n.t("settings.title") });
 
@@ -232,7 +233,6 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						});
 					text.inputEl.rows = 4;
-					text.inputEl.style.width = "100%";
 				});
 
 			new Setting(containerEl)

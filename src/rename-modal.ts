@@ -29,26 +29,15 @@ export class ImageRenameModal extends Modal {
 		contentEl.empty();
 
 		// Make modal wider
-		modalEl.style.width = "600px";
-		modalEl.style.maxWidth = "90vw";
+		modalEl.addClass("image-rename-modal");
 
 		contentEl.createEl("h2", { text: i18n.t("modal.title") });
 
 		// Add image thumbnail if image data is provided
 		if (this.imageData) {
 			const thumbnailContainer = contentEl.createDiv({ cls: "image-rename-thumbnail" });
-			thumbnailContainer.style.textAlign = "center";
-			thumbnailContainer.style.marginBottom = "16px";
-			thumbnailContainer.style.padding = "12px";
-			thumbnailContainer.style.backgroundColor = "var(--background-secondary)";
-			thumbnailContainer.style.borderRadius = "8px";
 
 			const img = thumbnailContainer.createEl("img");
-			img.style.maxWidth = "100%";
-			img.style.maxHeight = "300px";
-			img.style.objectFit = "contain";
-			img.style.borderRadius = "4px";
-			img.style.border = "1px solid var(--background-modifier-border)";
 
 			// Convert ArrayBuffer to data URL
 			const blob = new Blob([this.imageData]);
@@ -77,8 +66,6 @@ export class ImageRenameModal extends Modal {
 						this.updatePreview();
 					});
 
-				// Make input wider
-				text.inputEl.style.width = "350px";
 
 				// Auto-select filename without extension for easy editing
 				text.inputEl.focus();
@@ -105,7 +92,6 @@ export class ImageRenameModal extends Modal {
 							text: i18n.t("modal.ai.btn"),
 							cls: "ai-rename-button",
 						});
-						this.aiButton.style.marginLeft = "8px";
 						this.aiButton.addEventListener("click", async (e) => {
 							e.preventDefault();
 							await this.handleAIRename();
@@ -116,13 +102,6 @@ export class ImageRenameModal extends Modal {
 
 		// Add preview element
 		this.previewEl = contentEl.createDiv({ cls: "image-rename-preview" });
-		this.previewEl.style.marginTop = "8px";
-		this.previewEl.style.padding = "8px 12px";
-		this.previewEl.style.backgroundColor = "var(--background-secondary)";
-		this.previewEl.style.borderRadius = "4px";
-		this.previewEl.style.fontSize = "0.9em";
-		this.previewEl.style.color = "var(--text-muted)";
-		this.previewEl.style.wordBreak = "break-all";
 		this.updatePreview();
 
 		new Setting(contentEl)
