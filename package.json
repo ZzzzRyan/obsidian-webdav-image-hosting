@@ -1,6 +1,6 @@
 {
 	"name": "webdav-image-hosting",
-	"version": "0.2.0",
+	"version": "1.0.0",
 	"description": "Automatically upload pasted/dropped images to WebDAV server with powerful AI-assisted rename feature.",
 	"main": "main.js",
 	"scripts": {
