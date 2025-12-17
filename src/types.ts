@@ -17,7 +17,7 @@ export interface WebDAVImageUploaderSettings {
 	aiModel: string;
 	aiPrompt: string;
 	aiCompressImage: boolean;
-	uploadLocalImages: boolean;
+	enableContextMenu: boolean;
 	localFileHandling: LocalFileHandling;
 	debugMode: boolean;
 	language: Language;
@@ -38,7 +38,7 @@ export const DEFAULT_SETTINGS: WebDAVImageUploaderSettings = {
 	aiModel: "gpt-4o-mini",
 	aiPrompt: "Analyze this image and generate a filename.\nRules:\n1. Identify 2-3 lowercase English words describing the content, ordered from broad category to specific detail.\n2. Join them with underscores.\n3. ALWAYS append the fixed suffix \"_{datetime}\" at the end.\n4. Existing images in this document: {existing_images}. Consider these names to maintain naming consistency.\nOutput ONLY the final string (e.g., \"broad_specific_detail_{datetime}\").",
 	aiCompressImage: true,
-	uploadLocalImages: true,
+	enableContextMenu: true,
 	localFileHandling: "nothing",
 	debugMode: false,
 	language: "zh-cn",

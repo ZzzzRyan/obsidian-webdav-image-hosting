@@ -43,10 +43,10 @@ export default class WebDAVImageUploaderPlugin extends Plugin {
 			)
 		);
 
-		// Register context menu for local images
+		// Register context menu (includes single image upload and batch upload)
 		this.imageHandler.registerContextMenu();
 
-		// Register batch upload command
+		// Register batch upload command (can still be triggered via command palette)
 		this.addCommand({
 			id: 'batch-upload-images',
 			name: 'Batch upload all images in current file',
@@ -54,20 +54,6 @@ export default class WebDAVImageUploaderPlugin extends Plugin {
 				this.imageHandler.batchUploadImages(editor);
 			}
 		});
-
-		// Register editor menu for batch upload
-		this.registerEvent(
-			this.app.workspace.on("editor-menu", (menu, editor: Editor, view: MarkdownView) => {
-				menu.addItem((item) => {
-					item
-						.setTitle("Batch upload images to WebDAV")
-						.setIcon("upload-cloud")
-						.onClick(async () => {
-							await this.imageHandler.batchUploadImages(editor);
-						});
-				});
-			})
-		);
 
 		// Add settings tab
 		this.addSettingTab(new WebDAVImageUploaderSettingTab(this.app, this));

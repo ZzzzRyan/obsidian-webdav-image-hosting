@@ -378,7 +378,7 @@ export class ImageHandler {
 	}
 
 	registerContextMenu(): void {
-		if (!this.plugin.settings.uploadLocalImages) return;
+		if (!this.plugin.settings.enableContextMenu) return;
 
 		// Register context menu for image links in the editor
 		this.plugin.registerEvent(
@@ -391,18 +391,51 @@ export class ImageHandler {
 				const imageInfo = this.getImageAtCursor(editor, cursor);
 
 				if (imageInfo) {
+					// Single image upload menu
 					const imageType = imageInfo.isUrl ? 'URL' : 'local';
+					const truncatedName = this.truncateFileName(imageInfo.fileName, 30);
 					menu.addItem((item) => {
 						item
-							.setTitle(`Upload "${imageInfo.fileName}" to WebDAV (${imageType})`)
+							.setTitle(`Upload "${truncatedName}" to WebDAV (${imageType})`)
 							.setIcon("upload")
 							.onClick(async () => {
 								await this.handleImageLinkUpload(imageInfo, editor);
 							});
 					});
 				}
+
+				// Always show batch upload option
+				menu.addItem((item) => {
+					item
+						.setTitle("Batch upload images to WebDAV")
+						.setIcon("upload-cloud")
+						.onClick(async () => {
+							await this.batchUploadImages(editor);
+						});
+				});
 			})
 		);
+	}
+
+	private truncateFileName(fileName: string, maxLength: number): string {
+		if (fileName.length <= maxLength) {
+			return fileName;
+		}
+
+		// Extract extension
+		const lastDotIndex = fileName.lastIndexOf('.');
+		const ext = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : '';
+		const nameWithoutExt = lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+
+		// Calculate how much of the name we can show
+		const availableLength = maxLength - ext.length - 3; // 3 for "..."
+
+		if (availableLength <= 0) {
+			// If even the extension is too long, just truncate everything
+			return fileName.substring(0, maxLength - 3) + '...';
+		}
+
+		return nameWithoutExt.substring(0, availableLength) + '...' + ext;
 	}
 
 	private getImageAtCursor(editor: Editor, cursor: { line: number, ch: number }): { fileName: string, filePath: string, isUrl: boolean, fullMatch: string } | null {

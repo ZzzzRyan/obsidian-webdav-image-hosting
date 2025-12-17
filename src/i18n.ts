@@ -14,7 +14,7 @@ const translations: Record<Language, Translations> = {
 		"settings.url": "Image URL Configuration",
 		"settings.rename": "Rename Mode",
 		"settings.ai": "AI Configuration",
-		"settings.local": "Local Image Upload",
+		"settings.menu": "Editor Menu",
 		"settings.debug": "Debug",
 
 		// WebDAV settings
@@ -64,10 +64,11 @@ const translations: Record<Language, Translations> = {
 		"ai.test.success": "✓ AI connection successful!",
 		"ai.test.failed": "✗ AI connection failed. Check your settings.",
 
-		// Local upload settings
-		"local.enable": "Enable local image upload",
-		"local.enable.desc": "Add 'Upload to WebDAV' option to image file context menu",
+		// Editor menu settings
+		"menu.enable": "Enable editor context menu",
+		"menu.enable.desc": "Add image upload options to editor context menu:\n• Single image upload: Right-click on any image link (local file or remote URL)\n• Batch upload: Right-click anywhere to upload all images in current file",
 		"local.handling": "Local file handling",
+		"local.handling.title": "Local File Handling",
 		"local.handling.desc": "What to do with local image after upload",
 		"local.handling.keep": "Keep file",
 		"local.handling.trash": "Move to trash",
@@ -107,7 +108,7 @@ const translations: Record<Language, Translations> = {
 		"settings.url": "图片 URL 配置",
 		"settings.rename": "重命名模式",
 		"settings.ai": "AI 配置",
-		"settings.local": "本地图片上传",
+		"settings.menu": "编辑器菜单",
 		"settings.debug": "调试",
 
 		// WebDAV 设置
@@ -157,10 +158,11 @@ const translations: Record<Language, Translations> = {
 		"ai.test.success": "✓ AI 连接成功！",
 		"ai.test.failed": "✗ AI 连接失败，请检查设置。",
 
-		// 本地上传设置
-		"local.enable": "启用本地图片上传",
-		"local.enable.desc": "在图片文件右键菜单中添加\"上传到 WebDAV\"选项",
+		// 编辑器菜单设置
+		"menu.enable": "启用编辑器右键菜单",
+		"menu.enable.desc": "在编辑器右键菜单中添加图片上传选项：\n• 单图上传：在任意图片链接（本地文件或远程 URL）上右键上传\n• 批量上传：在任意位置右键上传当前文件中的所有图片",
 		"local.handling": "本地文件处理",
+		"local.handling.title": "本地文件处理",
 		"local.handling.desc": "上传后如何处理本地图片",
 		"local.handling.keep": "保留文件",
 		"local.handling.trash": "移到回收站",

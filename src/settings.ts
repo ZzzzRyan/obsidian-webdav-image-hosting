@@ -272,21 +272,27 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				);
 		}
 
-		// Local Image Upload
-		containerEl.createEl("h3", { text: i18n.t("settings.local") });
+		// Editor Menu
+		containerEl.createEl("h3", { text: i18n.t("settings.menu") });
 
 		new Setting(containerEl)
-			.setName(i18n.t("local.enable"))
-			.setDesc(i18n.t("local.enable.desc"))
+			.setName(i18n.t("menu.enable"))
+			.setDesc(i18n.t("menu.enable.desc"))
 			.addToggle((toggle) =>
 				toggle
-					.setValue(this.plugin.settings.uploadLocalImages)
+					.setValue(this.plugin.settings.enableContextMenu)
 					.onChange(async (value) => {
-						this.plugin.settings.uploadLocalImages = value;
+						this.plugin.settings.enableContextMenu = value;
 						await this.plugin.saveSettings();
 						new Notice(i18n.t("notice.reload"));
 					})
 			);
+
+		// Add a divider/subtitle for local file handling
+		containerEl.createEl("h4", {
+			text: i18n.t("local.handling.title"),
+			cls: "setting-item-heading"
+		});
 
 		new Setting(containerEl)
 			.setName(i18n.t("local.handling"))
