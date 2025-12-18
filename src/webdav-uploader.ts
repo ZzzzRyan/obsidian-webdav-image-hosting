@@ -1,5 +1,5 @@
 import { Notice, requestUrl } from "obsidian";
-import { WebDAVImageUploaderSettings, PlaceholderContext, replacePlaceholders, debugLog } from "./types";
+import { WebDAVImageUploaderSettings, replacePlaceholders, debugLog } from "./types";
 
 export class WebDAVUploader {
 	constructor(private settings: WebDAVImageUploaderSettings) {}
@@ -131,15 +131,6 @@ export class WebDAVUploader {
 				debugLog("WebDAV", "Upload successful! Final URL:", finalUrl);
 				return finalUrl;
 			} else {
-				let errorDetails = `Status ${response.status}`;
-				try {
-					if (response.text) {
-						errorDetails += `: ${response.text.substring(0, 200)}`;
-					}
-				} catch (e) {
-					// Ignore text parsing errors
-				}
-
 				console.error("[WebDAV] Upload failed:", {
 					status: response.status,
 					url: uploadUrl,

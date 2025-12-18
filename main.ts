@@ -28,7 +28,7 @@ export default class WebDAVImageUploaderPlugin extends Plugin {
 			this.app.workspace.on(
 				"editor-paste",
 				(evt: ClipboardEvent, editor: Editor, view: MarkdownView) => {
-					this.imageHandler.handlePaste(evt, editor, view);
+					void this.imageHandler.handlePaste(evt, editor, view);
 				}
 			)
 		);
@@ -38,7 +38,7 @@ export default class WebDAVImageUploaderPlugin extends Plugin {
 			this.app.workspace.on(
 				"editor-drop",
 				(evt: DragEvent, editor: Editor, view: MarkdownView) => {
-					this.imageHandler.handleDrop(evt, editor, view);
+					void this.imageHandler.handleDrop(evt, editor, view);
 				}
 			)
 		);
@@ -51,7 +51,7 @@ export default class WebDAVImageUploaderPlugin extends Plugin {
 			id: 'batch-upload-images',
 			name: 'Batch upload all images in current file',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.imageHandler.batchUploadImages(editor);
+				void this.imageHandler.batchUploadImages(editor);
 			}
 		});
 

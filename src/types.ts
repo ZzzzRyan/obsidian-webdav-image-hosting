@@ -1,5 +1,5 @@
 export type RenameMode = "dialog" | "ai" | "template";
-export type LocalFileHandling = "delete" | "trash" | "nothing";
+export type LocalFileHandling = "delete" | "nothing";
 export type Language = "en" | "zh-cn";
 
 export interface WebDAVImageUploaderSettings {
@@ -51,7 +51,7 @@ export function setDebugMode(enabled: boolean): void {
 	debugModeEnabled = enabled;
 }
 
-export function debugLog(tag: string, ...args: any[]): void {
+export function debugLog(tag: string, ...args: unknown[]): void {
 	if (debugModeEnabled) {
 		console.log(`[${tag}]`, ...args);
 	}
@@ -110,12 +110,6 @@ export function replacePlaceholders(
 	? existingImages.join(', ')
 	: 'None';
 
-	debugLog("[Placeholders] Replacing:", {
-		template,
-		originalName,
-		values: { timestamp, randomStr, datetime, baseName, ext, existingImagesList }
-	});
-
 	const result = template
 		.replace(/\{timestamp\}/g, timestamp)
 		.replace(/\{random\}/g, randomStr)
@@ -124,6 +118,5 @@ export function replacePlaceholders(
 		.replace(/\{ext\}/g, ext)
 		.replace(/\{existing_images\}/g, existingImagesList);
 
-	debugLog("Placeholders", "Result:", result);
 	return result;
 }

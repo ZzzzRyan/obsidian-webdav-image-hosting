@@ -92,9 +92,9 @@ export class ImageRenameModal extends Modal {
 							text: i18n.t("modal.ai.btn"),
 							cls: "ai-rename-button",
 						});
-						this.aiButton.addEventListener("click", async (e) => {
+						this.aiButton.addEventListener("click", (e) => {
 							e.preventDefault();
-							await this.handleAIRename();
+							void this.handleAIRename();
 						});
 					}
 				}
@@ -122,7 +122,9 @@ export class ImageRenameModal extends Modal {
 
 	private updatePreview() {
 		if (this.previewEl) {
-			this.previewEl.innerHTML = `<strong>${i18n.t("modal.filename.preview")}:</strong> ${this.fileName}`;
+			this.previewEl.empty();
+			this.previewEl.createEl("strong", { text: i18n.t("modal.filename.preview") + ": " });
+			this.previewEl.appendText(this.fileName);
 		}
 	}
 

@@ -1,5 +1,5 @@
 import { requestUrl, Notice } from "obsidian";
-import { WebDAVImageUploaderSettings, PlaceholderContext, normalizeAIEndpoint, replacePlaceholders, debugLog } from "./types";
+import { WebDAVImageUploaderSettings, normalizeAIEndpoint, replacePlaceholders, debugLog } from "./types";
 
 export class AIRenameService {
 	constructor(private settings: WebDAVImageUploaderSettings) {}
@@ -144,7 +144,7 @@ export class AIRenameService {
 					} else if (typeof response.text === 'string') {
 						errorMessage = response.text.substring(0, 200);
 					}
-				} catch (e) {
+				} catch {
 					// If parsing fails, use raw text
 					if (typeof response.text === 'string') {
 						errorMessage = `${response.status}: ${response.text.substring(0, 100)}`;
@@ -159,7 +159,7 @@ export class AIRenameService {
 			let result;
 			try {
 				result = response.json;
-			} catch (e) {
+			} catch {
 				console.error("[AI] Failed to parse JSON response:", response.text);
 				throw new Error("Invalid JSON response from AI API");
 			}
@@ -235,7 +235,7 @@ export class AIRenameService {
 
 	private sanitizeFileName(name: string): string {
 		// Remove any quotes, backticks, or code block markers
-		let cleaned = name
+		const cleaned = name
 			.replace(/^["'`]+|["'`]+$/g, "") // Remove quotes at start/end
 			.replace(/^```[\s\S]*?```$/g, "") // Remove code blocks
 			.replace(/^\s*[\r\n]/gm, ""); // Remove empty lines

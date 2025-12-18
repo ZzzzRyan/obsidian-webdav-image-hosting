@@ -1,5 +1,4 @@
-import { Editor, MarkdownView, Notice, TFile, Menu } from "obsidian";
-import { WebDAVUploader } from "./webdav-uploader";
+import { Editor, MarkdownView, Notice, TFile, Menu, requestUrl } from "obsidian";
 import { ImageRenameModal } from "./rename-modal";
 import { AIRenameService } from "./ai-rename";
 import WebDAVImageUploaderPlugin from "../main";
@@ -212,8 +211,8 @@ export class ImageHandler {
 		// Create AI rename callback if AI is configured
 		const aiCallback = this.plugin.settings.aiApiKey
 			? async () => {
-					return await this.aiRenameService.generateFileName(imageData, existingImages);
-			  }
+				return await this.aiRenameService.generateFileName(imageData, existingImages);
+			}
 			: undefined;
 
 		// Return a promise that resolves when the modal is submitted or closed
@@ -229,9 +228,8 @@ export class ImageHandler {
 			const modal = new ImageRenameModal(
 				this.plugin.app,
 				defaultName,
-				async (fileName) => {
-					await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
-					safeResolve();
+				(fileName) => {
+					void this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo).then(safeResolve);
 				},
 				aiCallback,
 				imageData
@@ -360,12 +358,9 @@ export class ImageHandler {
 		try {
 			switch (handling) {
 				case "delete":
-					await this.plugin.app.vault.delete(file);
+					// Use fileManager.trashFile to respect user's deletion preference
+					await this.plugin.app.fileManager.trashFile(file);
 					new Notice(`Deleted local file: ${file.name}`);
-					break;
-				case "trash":
-					await this.plugin.app.vault.trash(file, true);
-					new Notice(`Moved to trash: ${file.name}`);
 					break;
 				case "nothing":
 					// Do nothing
@@ -373,7 +368,8 @@ export class ImageHandler {
 			}
 		} catch (error) {
 			console.error("Error handling local file:", error);
-			new Notice(`Failed to handle local file: ${error.message}`);
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Failed to handle local file: ${message}`);
 		}
 	}
 
@@ -385,7 +381,6 @@ export class ImageHandler {
 			this.plugin.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => {
 				// Get the text at cursor position to check if it's an image link
 				const cursor = editor.getCursor();
-				const line = editor.getLine(cursor.line);
 
 				// Check if cursor is on an image reference (wiki or markdown style)
 				const imageInfo = this.getImageAtCursor(editor, cursor);
@@ -398,8 +393,8 @@ export class ImageHandler {
 						item
 							.setTitle(`Upload "${truncatedName}" to WebDAV (${imageType})`)
 							.setIcon("upload")
-							.onClick(async () => {
-								await this.handleImageLinkUpload(imageInfo, editor);
+							.onClick(() => {
+								void this.handleImageLinkUpload(imageInfo, editor);
 							});
 					});
 				}
@@ -409,8 +404,8 @@ export class ImageHandler {
 					item
 						.setTitle("Batch upload images to WebDAV")
 						.setIcon("upload-cloud")
-						.onClick(async () => {
-							await this.batchUploadImages(editor);
+						.onClick(() => {
+							void this.batchUploadImages(editor);
 						});
 				});
 			})
@@ -474,17 +469,15 @@ export class ImageHandler {
 
 	private async downloadImageFromUrl(url: string): Promise<ArrayBuffer> {
 		try {
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
-			}
-			const contentType = response.headers.get('content-type');
+			const response = await requestUrl({ url, method: 'GET' });
+			const contentType = response.headers['content-type'] || response.headers['Content-Type'];
 			if (!contentType || !contentType.startsWith('image/')) {
 				throw new Error('URL does not point to an image');
 			}
-			return await response.arrayBuffer();
-		} catch (error) {
-			throw new Error(`Failed to download image: ${error.message}`);
+			return response.arrayBuffer;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			throw new Error(`Failed to download image: ${message}`);
 		}
 	}
 

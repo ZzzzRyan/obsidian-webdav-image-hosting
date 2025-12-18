@@ -44,9 +44,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("https://dav.example.com")
 					.setValue(this.plugin.settings.webdavUrl)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.webdavUrl = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
@@ -57,9 +57,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("username")
 					.setValue(this.plugin.settings.webdavUsername)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.webdavUsername = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
@@ -83,9 +83,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("/images")
 					.setValue(this.plugin.settings.webdavPath)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.webdavPath = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
@@ -120,9 +120,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("https://cdn.example.com/images")
 					.setValue(this.plugin.settings.customUrlPrefix)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.customUrlPrefix = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
@@ -138,10 +138,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					.addOption("ai", i18n.t("rename.mode.ai"))
 					.addOption("template", i18n.t("rename.mode.template"))
 					.setValue(this.plugin.settings.renameMode)
-					.onChange(async (value: "dialog" | "ai" | "template") => {
+					.onChange((value: "dialog" | "ai" | "template") => {
 						this.plugin.settings.renameMode = value;
-						await this.plugin.saveSettings();
-						this.display(); // Refresh to show/hide relevant settings
+						void this.plugin.saveSettings().then(() => this.display());
 					})
 			);
 
@@ -154,15 +153,15 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					.addOption("ai", i18n.t("rename.mode.ai"))
 					.addOption("template", i18n.t("rename.mode.template"))
 					.setValue(this.plugin.settings.batchUploadRenameMode)
-					.onChange(async (value: "dialog" | "ai" | "template") => {
+					.onChange((value: "dialog" | "ai" | "template") => {
 						this.plugin.settings.batchUploadRenameMode = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
 		// Template settings (shown for dialog and template modes)
 		if (this.plugin.settings.renameMode === "dialog" ||
-		    this.plugin.settings.renameMode === "template") {
+			this.plugin.settings.renameMode === "template") {
 			new Setting(containerEl)
 				.setName(i18n.t("rename.template"))
 				.setDesc(i18n.t("rename.template.desc"))
@@ -170,16 +169,16 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					text
 						.setPlaceholder("image-{timestamp}")
 						.setValue(this.plugin.settings.defaultImageName)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.defaultImageName = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						})
 				);
 		}
 
 		// AI Configuration (shown for AI and dialog modes)
 		if (this.plugin.settings.renameMode === "ai" ||
-		    this.plugin.settings.renameMode === "dialog") {
+			this.plugin.settings.renameMode === "dialog") {
 			containerEl.createEl("h3", { text: i18n.t("settings.ai") });
 
 			new Setting(containerEl)
@@ -188,9 +187,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				.addText((text) => {
 					text.setPlaceholder("sk-...")
 						.setValue(this.plugin.settings.aiApiKey)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.aiApiKey = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						});
 					text.inputEl.type = "password";
 				});
@@ -202,9 +201,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					text
 						.setPlaceholder("https://api.openai.com")
 						.setValue(this.plugin.settings.aiEndpoint)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.aiEndpoint = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						})
 				);
 
@@ -215,9 +214,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					text
 						.setPlaceholder("gpt-4o-mini")
 						.setValue(this.plugin.settings.aiModel)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.aiModel = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						})
 				);
 
@@ -228,9 +227,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 					text
 						.setPlaceholder("Describe what prompt to use for AI naming...")
 						.setValue(this.plugin.settings.aiPrompt)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.aiPrompt = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						});
 					text.inputEl.rows = 4;
 				});
@@ -241,9 +240,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 				.addToggle((toggle) =>
 					toggle
 						.setValue(this.plugin.settings.aiCompressImage)
-						.onChange(async (value) => {
+						.onChange((value) => {
 							this.plugin.settings.aiCompressImage = value;
-							await this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 						})
 				);
 
@@ -281,9 +280,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.enableContextMenu)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.enableContextMenu = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 						new Notice(i18n.t("notice.reload"));
 					})
 			);
@@ -300,12 +299,11 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("nothing", i18n.t("local.handling.keep"))
-					.addOption("trash", i18n.t("local.handling.trash"))
 					.addOption("delete", i18n.t("local.handling.delete"))
 					.setValue(this.plugin.settings.localFileHandling)
-					.onChange(async (value: "nothing" | "trash" | "delete") => {
+					.onChange((value: "nothing" | "delete") => {
 						this.plugin.settings.localFileHandling = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 
@@ -318,9 +316,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.debugMode)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.debugMode = value;
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					})
 			);
 	}

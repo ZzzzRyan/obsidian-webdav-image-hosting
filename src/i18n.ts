@@ -71,8 +71,7 @@ const translations: Record<Language, Translations> = {
 		"local.handling.title": "Local File Handling",
 		"local.handling.desc": "What to do with local image after upload",
 		"local.handling.keep": "Keep file",
-		"local.handling.trash": "Move to trash",
-		"local.handling.delete": "Delete permanently",
+		"local.handling.delete": "Delete (respects Obsidian settings)",
 
 		// Debug settings
 		"debug.mode": "Debug mode",
@@ -165,8 +164,7 @@ const translations: Record<Language, Translations> = {
 		"local.handling.title": "本地文件处理",
 		"local.handling.desc": "上传后如何处理本地图片",
 		"local.handling.keep": "保留文件",
-		"local.handling.trash": "移到回收站",
-		"local.handling.delete": "永久删除",
+		"local.handling.delete": "删除文件（遵循 Obsidian 设置）",
 
 		// 调试设置
 		"debug.mode": "调试模式",
@@ -201,7 +199,7 @@ export class I18n {
 
 	constructor(language?: Language) {
 		// Auto-detect language from Obsidian's locale
-		const obsidianLang = (window as any).moment?.locale?.() || "en";
+		const obsidianLang = (window as { moment?: { locale?: () => string } }).moment?.locale?.() || "en";
 		this.currentLanguage = language || this.detectLanguage(obsidianLang);
 	}
 
