@@ -1,6 +1,7 @@
 import { Editor, MarkdownView, Notice, TFile, Menu, requestUrl } from "obsidian";
 import { ImageRenameModal } from "./rename-modal";
 import { AIRenameService } from "./ai-rename";
+import { i18n } from "./i18n";
 import WebDAVImageUploaderPlugin from "../main";
 
 export class ImageHandler {
@@ -265,7 +266,7 @@ export class ImageHandler {
 			const fileName = aiName + ext;
 
 			await this.uploadAndInsert(imageData, fileName, editor, localFile, imageRefInfo);
-		} catch (error) {
+		} catch {
 			// Fallback to template mode
 			new Notice("AI rename failed, using template...");
 			await this.handleTemplateMode(imageData, originalName, editor, localFile, imageRefInfo);
@@ -387,11 +388,14 @@ export class ImageHandler {
 
 				if (imageInfo) {
 					// Single image upload menu
-					const imageType = imageInfo.isUrl ? 'URL' : 'local';
+					const imageType = imageInfo.isUrl ? i18n.t('menu.type.url') : i18n.t('menu.type.local');
 					const truncatedName = this.truncateFileName(imageInfo.fileName, 30);
+					const menuTitle = i18n.t('menu.upload.single')
+						.replace('{name}', truncatedName)
+						.replace('{type}', imageType);
 					menu.addItem((item) => {
 						item
-							.setTitle(`Upload "${truncatedName}" to WebDAV (${imageType})`)
+							.setTitle(menuTitle)
 							.setIcon("upload")
 							.onClick(() => {
 								void this.handleImageLinkUpload(imageInfo, editor);
@@ -402,7 +406,7 @@ export class ImageHandler {
 				// Always show batch upload option
 				menu.addItem((item) => {
 					item
-						.setTitle("Batch upload images to WebDAV")
+						.setTitle(i18n.t('menu.upload.batch'))
 						.setIcon("upload-cloud")
 						.onClick(() => {
 							void this.batchUploadImages(editor);
@@ -445,7 +449,7 @@ export class ImageHandler {
 			const end = start + match[0].length;
 			if (ch >= start && ch <= end) {
 				const path = match[1];
-				const fileName = path.includes('/') ? path.split('/').pop()! : path;
+				const fileName = path.includes('/') ? (path.split('/').pop() || path) : path;
 				const isUrl = /^https?:\/\//i.test(path);
 				return { fileName, filePath: path, isUrl, fullMatch: match[0] };
 			}
@@ -458,7 +462,7 @@ export class ImageHandler {
 			const end = start + match[0].length;
 			if (ch >= start && ch <= end) {
 				const path = match[2];
-				const fileName = path.includes('/') ? path.split('/').pop()! : path;
+				const fileName = path.includes('/') ? (path.split('/').pop() || path) : path;
 				const isUrl = /^https?:\/\//i.test(path);
 				return { fileName, filePath: path, isUrl, fullMatch: match[0] };
 			}
@@ -535,7 +539,7 @@ export class ImageHandler {
 			}
 
 			// Extract filename
-			const fileName = url.includes('/') ? url.split('/').pop()! : url;
+			const fileName = url.includes('/') ? (url.split('/').pop() || url) : url;
 
 			images.push({
 				url: url,
@@ -558,7 +562,7 @@ export class ImageHandler {
 			}
 
 			// Extract filename
-			const fileName = url.includes('/') ? url.split('/').pop()! : url;
+			const fileName = url.includes('/') ? (url.split('/').pop() || url) : url;
 
 			images.push({
 				url: url,

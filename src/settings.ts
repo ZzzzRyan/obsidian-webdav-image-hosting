@@ -16,7 +16,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 		containerEl.empty();
 		containerEl.addClass("webdav-settings");
 
-		containerEl.createEl("h2", { text: i18n.t("settings.title") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.title"))
+			.setHeading();
 
 		// Language Setting
 		new Setting(containerEl)
@@ -35,7 +37,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			);
 
 		// WebDAV Configuration
-		containerEl.createEl("h3", { text: i18n.t("settings.webdav") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.webdav"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("webdav.url"))
@@ -111,7 +115,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			);
 
 		// Image URL Configuration
-		containerEl.createEl("h3", { text: i18n.t("settings.url") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.url"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("url.prefix"))
@@ -127,7 +133,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			);
 
 		// Rename Mode Configuration
-		containerEl.createEl("h3", { text: i18n.t("settings.rename") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.rename"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("rename.mode"))
@@ -179,7 +187,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 		// AI Configuration (shown for AI and dialog modes)
 		if (this.plugin.settings.renameMode === "ai" ||
 			this.plugin.settings.renameMode === "dialog") {
-			containerEl.createEl("h3", { text: i18n.t("settings.ai") });
+			new Setting(containerEl)
+				.setName(i18n.t("settings.ai"))
+				.setHeading();
 
 			new Setting(containerEl)
 				.setName(i18n.t("ai.key"))
@@ -272,7 +282,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 		}
 
 		// Editor Menu
-		containerEl.createEl("h3", { text: i18n.t("settings.menu") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.menu"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("menu.enable"))
@@ -288,10 +300,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			);
 
 		// Add a divider/subtitle for local file handling
-		containerEl.createEl("h4", {
-			text: i18n.t("local.handling.title"),
-			cls: "setting-item-heading"
-		});
+		new Setting(containerEl)
+			.setName(i18n.t("local.handling.title"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("local.handling"))
@@ -308,7 +319,9 @@ export class WebDAVImageUploaderSettingTab extends PluginSettingTab {
 			);
 
 		// Debug Settings
-		containerEl.createEl("h3", { text: i18n.t("settings.debug") });
+		new Setting(containerEl)
+			.setName(i18n.t("settings.debug"))
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(i18n.t("debug.mode"))

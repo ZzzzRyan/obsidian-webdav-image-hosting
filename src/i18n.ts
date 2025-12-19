@@ -9,7 +9,7 @@ interface Translations {
 const translations: Record<Language, Translations> = {
 	"en": {
 		// Settings headings
-		"settings.title": "WebDAV Image Uploader Settings",
+		"settings.title": "WebDAV Image Hosting Settings",
 		"settings.webdav": "WebDAV Configuration",
 		"settings.url": "Image URL Configuration",
 		"settings.rename": "Rename Mode",
@@ -67,6 +67,10 @@ const translations: Record<Language, Translations> = {
 		// Editor menu settings
 		"menu.enable": "Enable editor context menu",
 		"menu.enable.desc": "Add image upload options to editor context menu:\n• Single image upload: Right-click on any image link (local file or remote URL)\n• Batch upload: Right-click anywhere to upload all images in current file",
+		"menu.upload.single": "Upload \"{name}\" to WebDAV ({type})",
+		"menu.upload.batch": "Batch upload images to WebDAV",
+		"menu.type.local": "local",
+		"menu.type.url": "URL",
 		"local.handling": "Local file handling",
 		"local.handling.title": "Local File Handling",
 		"local.handling.desc": "What to do with local image after upload",
@@ -102,7 +106,7 @@ const translations: Record<Language, Translations> = {
 
 	"zh-cn": {
 		// 设置标题
-		"settings.title": "WebDAV 图片上传器设置",
+		"settings.title": "WebDAV Image Hosting 设置",
 		"settings.webdav": "WebDAV 配置",
 		"settings.url": "图片 URL 配置",
 		"settings.rename": "重命名模式",
@@ -160,6 +164,10 @@ const translations: Record<Language, Translations> = {
 		// 编辑器菜单设置
 		"menu.enable": "启用编辑器右键菜单",
 		"menu.enable.desc": "在编辑器右键菜单中添加图片上传选项：\n• 单图上传：在任意图片链接（本地文件或远程 URL）上右键上传\n• 批量上传：在任意位置右键上传当前文件中的所有图片",
+		"menu.upload.single": "上传 \"{name}\" 到 WebDAV ({type})",
+		"menu.upload.batch": "批量上传图片到 WebDAV",
+		"menu.type.local": "本地",
+		"menu.type.url": "URL",
 		"local.handling": "本地文件处理",
 		"local.handling.title": "本地文件处理",
 		"local.handling.desc": "上传后如何处理本地图片",

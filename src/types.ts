@@ -53,7 +53,7 @@ export function setDebugMode(enabled: boolean): void {
 
 export function debugLog(tag: string, ...args: unknown[]): void {
 	if (debugModeEnabled) {
-		console.log(`[${tag}]`, ...args);
+		console.debug(`[${tag}]`, ...args);
 	}
 }
 
