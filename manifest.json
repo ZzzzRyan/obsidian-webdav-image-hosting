@@ -1,7 +1,7 @@
 {
 	"id": "webdav-image-hosting",
 	"name": "WebDAV Image Hosting",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Upload images to WebDAV servers like Nextcloud, 123pan, or Synology with AI-assisted renaming and custom URL support.",
 	"author": "ZzzzRyan",
